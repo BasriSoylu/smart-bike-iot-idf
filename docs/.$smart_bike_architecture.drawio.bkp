@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net">
+  <diagram name="Smart Bike IoT - Kod Mimarisi">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- ===== BAŞLIK ===== -->
+        <mxCell id="100" value="Smart Bike IoT — Kod Mimarisi (ESP32 + SIM800C)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=18;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="300" y="20" width="900" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== main.c KUTUSU ===== -->
+        <mxCell id="200" value="main.c — app_main()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;fontStyle=1;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="600" y="80" width="260" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- app_main adımları -->
+        <mxCell id="201" value="1. gsm_init()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="600" y="150" width="260" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="202" value="2. gsm_gprs_connect()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="600" y="205" width="260" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="203" value="3. ota_check_and_update()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="600" y="260" width="260" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="204" value="4. while(1) — Normal çalışma döngüsü" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="600" y="315" width="260" height="35" as="geometry"/>
+        </mxCell>
+
+        <!-- main okları -->
+        <mxCell id="e200" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="200" target="201" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e201" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="201" target="202" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e202" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="202" target="203" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e203" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="203" target="204" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- ===== GSM COMPONENT ===== -->
+        <mxCell id="300" value="components/gsm/gsm.c" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;fontStyle=1;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="100" y="80" width="340" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- gsm_init -->
+        <mxCell id="301" value="gsm_init()&#xa;─────────────────&#xa;1. UART2 yapılandır (GPIO16/17)&#xa;2. uart_driver_install (RX:32KB)&#xa;3. AT → OK? → 115200 baud&#xa;4. Cevap yoksa 9600 dene&#xa;5. AT+IPR=115200 ile hız artır" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f9f9f9;strokeColor=#82b366;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="100" y="150" width="340" height="110" as="geometry"/>
+        </mxCell>
+
+        <!-- gsm_send_command -->
+        <mxCell id="302" value="gsm_send_command(cmd, response, timeout)&#xa;─────────────────&#xa;1. uart_flush_input → RX temizle&#xa;2. uart_write_bytes → AT komutu gönder&#xa;3. uart_write_bytes → \r\n ekle&#xa;4. uart_read_bytes → cevap oku (timeout kadar)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f9f9f9;strokeColor=#82b366;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="100" y="280" width="340" height="100" as="geometry"/>
+        </mxCell>
+
+        <!-- gsm_wait_response -->
+        <mxCell id="303" value="gsm_wait_response(expected, response, timeout)&#xa;─────────────────&#xa;1. Döngü: timeout dolana kadar tekrar et&#xa;2. Her 500ms'de uart_read_bytes&#xa;3. Beklenen string geldi mi? → strstr&#xa;4. Geldiyse hemen dön, gelmediyse bekle" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f9f9f9;strokeColor=#82b366;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="100" y="400" width="340" height="100" as="geometry"/>
+        </mxCell>
+
+        <!-- gsm_gprs_connect -->
+        <mxCell id="304" value="gsm_gprs_connect()&#xa;─────────────────&#xa;AT+CGATT=1      → GPRS'e bağlan&#xa;AT+SAPBR=3,1,Contype,GPRS&#xa;AT+SAPBR=3,1,APN,internet&#xa;AT+SAPBR=1,1    → Bearer aç&#xa;AT+SAPBR=2,1    → IP kontrol et&#xa;0.0.0.0 gelirse → HATA" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f9f9f9;strokeColor=#82b366;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="100" y="520" width="340" height="120" as="geometry"/>
+        </mxCell>
+
+        <!-- gsm_http_get_json -->
+        <mxCell id="305" value="gsm_http_get_json(url, buf, max)&#xa;─────────────────&#xa;AT+HTTPTERM     → önceki oturumu kapat&#xa;AT+HTTPINIT     → HTTP stack başlat&#xa;AT+HTTPPARA=CID,1&#xa;AT+HTTPPARA=URL,&lt;url&gt;&#xa;AT+HTTPACTION=0 → GET isteği gönder&#xa;+HTTPACTION:0,200,&lt;len&gt; bekle&#xa;AT+HTTPREAD=0,&lt;len&gt; → veriyi oku&#xa;+HTTPREAD: header parse et&#xa;AT+HTTPTERM     → kapat" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f9f9f9;strokeColor=#82b366;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="100" y="660" width="340" height="175" as="geometry"/>
+        </mxCell>
+
+        <!-- gsm_http_get_binary -->
+        <mxCell id="306" value="gsm_http_get_binary(url, offset, buf, size, ...)&#xa;─────────────────&#xa;[offset==0 ise — ilk chunk]&#xa;  AT+HTTPTERM + 2s bekle&#xa;  AT+HTTPINIT, HTTPPARA URL&#xa;  AT+HTTPACTION=0 → tüm dosyayı indir (90s)&#xa;  +HTTPACTION:0,200,&lt;total&gt; → boyut al&#xa;─────────────────&#xa;[Her chunk için]&#xa;  AT+HTTPREAD=&lt;offset&gt;,16384&#xa;  +HTTPREAD header parse et&#xa;  Binary veriyi out_buf'a kopyala" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f9f9f9;strokeColor=#82b366;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="100" y="855" width="340" height="185" as="geometry"/>
+        </mxCell>
+
+        <!-- gsm okları -->
+        <mxCell id="e300" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="300" target="301" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e301" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="301" target="302" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e302" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="302" target="303" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e303" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="303" target="304" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e304" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="304" target="305" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e305" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="305" target="306" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- ===== OTA COMPONENT ===== -->
+        <mxCell id="400" value="components/ota/ota.c" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=13;fontStyle=1;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="80" width="340" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- parse_version -->
+        <mxCell id="401" value="parse_version(json, out, max)  [static]&#xa;─────────────────&#xa;1. JSON'da &quot;version&quot; key'i bul&#xa;2. : ve &quot; karakterlerini atla&#xa;3. Değeri kopyala → out buffer&#xa;Örn: {&quot;version&quot;:&quot;V2.0&quot;} → &quot;V2.0&quot;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f9f9f9;strokeColor=#d79b00;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="150" width="340" height="105" as="geometry"/>
+        </mxCell>
+
+        <!-- ota_check_and_update -->
+        <mxCell id="402" value="ota_check_and_update()&#xa;─────────────────&#xa;1. gsm_http_get_json(version.json)&#xa;2. parse_version → server_version&#xa;3. strcmp(server, mevcut)&#xa;   Aynıysa → return 0 (güncelleme yok)&#xa;─────────────────&#xa;4. esp_ota_get_next_update_partition&#xa;   → ota_0 veya ota_1 seç&#xa;5. esp_ota_begin → partition hazırla&#xa;─────────────────&#xa;6. DÖNGÜ: gsm_http_get_binary (16KB)&#xa;   esp_ota_write → flash'a yaz&#xa;   offset += chunk_len&#xa;   offset &gt;= total → döngü bitir&#xa;─────────────────&#xa;7. esp_ota_end → firmware doğrula&#xa;8. esp_ota_set_boot_partition&#xa;9. esp_restart() → yeniden başlat" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f9f9f9;strokeColor=#d79b00;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="275" width="340" height="310" as="geometry"/>
+        </mxCell>
+
+        <!-- ota okları -->
+        <mxCell id="e400" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="400" target="401" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e401" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="401" target="402" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- ===== CONFIG COMPONENT ===== -->
+        <mxCell id="500" value="components/config/config.h" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=13;fontStyle=1;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="600" y="420" width="260" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="501" value="FIRMWARE_VERSION  &quot;1.0.0&quot;&#xa;OTA_SERVER_HOST&#xa;OTA_VERSION_URL&#xa;OTA_FIRMWARE_URL&#xa;GSM_UART_PORT / TX / RX&#xa;GSM_DEFAULT_BAUD  9600&#xa;GSM_TARGET_BAUD   115200" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f9f9f9;strokeColor=#9673a6;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="600" y="480" width="260" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="e500" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="500" target="501" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- ===== FLASH / PARTITION ===== -->
+        <mxCell id="600" value="Flash Bellek (hafiza_listesi.csv)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=13;fontStyle=1;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="600" y="650" width="260" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="601" value="nvs      0x9000   20KB&#xa;otadata  0xe000    8KB&#xa;ota_0    0x10000  1.5MB  ← aktif&#xa;ota_1    0x190000 1.5MB  ← güncelleme" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f9f9f9;strokeColor=#b85450;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="600" y="710" width="260" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="e600" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="600" target="601" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- ===== SUNUCU ===== -->
+        <mxCell id="700" value="Hetzner VPS — boldmotorbikes.duckdns.org" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="600" y="840" width="260" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="701" value="GET /version.json → versiyon bilgisi&#xa;GET /firmware.bin → binary firmware&#xa;POST /api/upload  → yeni firmware yükle&#xa;Node.js + Express + PM2 + Nginx" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f9f9f9;strokeColor=#b85450;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="600" y="900" width="260" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="e700" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="700" target="701" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- ===== BAĞLANTI OKLARI (componentler arası) ===== -->
+        <!-- main → gsm -->
+        <mxCell id="l1" value="gsm_init()&#xa;gsm_gprs_connect()" style="edgeStyle=orthogonalEdgeStyle;dashed=1;strokeColor=#6c8ebf;" edge="1" source="201" target="300" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="l2" value="gsm_gprs_connect()" style="edgeStyle=orthogonalEdgeStyle;dashed=1;strokeColor=#6c8ebf;" edge="1" source="202" target="304" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <!-- main → ota -->
+        <mxCell id="l3" value="ota_check_and_update()" style="edgeStyle=orthogonalEdgeStyle;dashed=1;strokeColor=#d79b00;" edge="1" source="203" target="400" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <!-- ota → gsm -->
+        <mxCell id="l4" value="gsm_http_get_json()&#xa;gsm_http_get_binary()" style="edgeStyle=orthogonalEdgeStyle;dashed=1;strokeColor=#82b366;" edge="1" source="402" target="305" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <!-- ota → flash -->
+        <mxCell id="l5" value="esp_ota_write()" style="edgeStyle=orthogonalEdgeStyle;dashed=1;strokeColor=#b85450;" edge="1" source="402" target="601" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <!-- gsm → sunucu -->
+        <mxCell id="l6" value="HTTP GET (GPRS)" style="edgeStyle=orthogonalEdgeStyle;dashed=1;strokeColor=#b85450;" edge="1" source="305" target="701" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <!-- config → herkese -->
+        <mxCell id="l7" value="REQUIRES config" style="edgeStyle=orthogonalEdgeStyle;dashed=1;strokeColor=#9673a6;" edge="1" source="501" target="300" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="l8" value="REQUIRES config" style="edgeStyle=orthogonalEdgeStyle;dashed=1;strokeColor=#9673a6;" edge="1" source="501" target="402" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
