@@ -7,9 +7,9 @@
  * Yazar         : Hasan Basri SOYLU
  * Tarih         : 08.04.2026
  *===============================================================
- * Aciklama      : UART sub-modülü public API. Platform
- *                 bagimsiz mimari — uart_handle_t ile birden
- *                 fazla UART portu yönetilebilir.
+ * Aciklama      : UART sub-modulu public API. Platform bagimsiz
+ *                 mimari - uart_handle_t ile birden fazla UART
+ *                 portu yonetilebilir.
  ****************************************************************/
 
 #pragma once
@@ -17,52 +17,52 @@
 #include "uart_types.h"
 
 /**
- * @brief UART sürücüsünü başlatır, yapılandırır ve kullanıma hazır hale getirir.
+ * @brief UART surucusunu baslatir, yapilandirir ve kullanima hazir hale getirir.
  *
- * @param yapilandirma Port numarası, pin numaraları ve baud rate bilgilerini içeren yapı
- * @return Başarılı olursa geçerli UART tanıtıcısı, hata durumunda -1
+ * @param yapilandirma Port numarasi, pin numaralari ve baud rate bilgilerini iceren yapi
+ * @return Basarili olursa gecerli UART tanitici, hata durumunda -1
  */
 uart_handle_t uart_baslat(const uart_cfg_t *yapilandirma);
 
 /**
- * @brief UART sürücüsünü durdurur ve ayrılan kaynakları serbest bırakır.
+ * @brief UART surucusunu durdurur ve ayrilan kaynaklari serbest birakar.
  *
- * @param tanitici uart_baslat() ile alınan UART tanıtıcısı
+ * @param tanitici uart_baslat() ile alinan UART tanitici
  */
 void uart_durdur(uart_handle_t tanitici);
 
 /**
- * @brief Belirtilen bayt dizisini UART hattı üzerinden gönderir.
+ * @brief Belirtilen bayt dizisini UART hatti uzerinden gonderir.
  *
- * @param tanitici  uart_baslat() ile alınan UART tanıtıcısı
- * @param veri      Gönderilecek verinin başlangıç adresi
- * @param uzunluk   Gönderilecek bayt sayısı
- * @return Gönderilen bayt sayısı, hata durumunda -1
+ * @param tanitici  uart_baslat() ile alinan UART tanitici
+ * @param veri      Gonderilecek verinin baslangic adresi
+ * @param uzunluk   Gonderilecek bayt sayisi
+ * @return Gonderilen bayt sayisi, hata durumunda -1
  */
 int uart_gonder(uart_handle_t tanitici, const uint8_t *veri, int uzunluk);
 
 /**
- * @brief UART hattından veri okur, zaman aşımı süresince yeni veri bekler.
+ * @brief UART hattindan veri okur, zaman asimi suresince yeni veri bekler.
  *
- * @param tanitici         uart_baslat() ile alınan UART tanıtıcısı
- * @param tampon           Okunan verinin yazılacağı bellek adresi
- * @param maksimum_uzunluk Tampona yazılabilecek maksimum bayt sayısı
- * @param zaman_asimi_ms   Veri beklenecek maksimum süre (milisaniye)
- * @return Okunan bayt sayısı, zaman aşımında 0, hata durumunda -1
+ * @param tanitici         uart_baslat() ile alinan UART tanitici
+ * @param tampon           Okunan verinin yazilacagi bellek adresi
+ * @param maksimum_uzunluk Tampona yazilabilecek maksimum bayt sayisi
+ * @param zaman_asimi_ms   Veri beklenecek maksimum sure (milisaniye)
+ * @return Okunan bayt sayisi, zaman asiminda 0, hata durumunda -1
  */
 int uart_oku(uart_handle_t tanitici, uint8_t *tampon, int maksimum_uzunluk, uint32_t zaman_asimi_ms);
 
 /**
- * @brief Giriş tamponundaki okunmamış tüm veriyi siler.
+ * @brief Giris tamponundaki okunmamis tum veriyi siler.
  *
- * @param tanitici uart_baslat() ile alınan UART tanıtıcısı
+ * @param tanitici uart_baslat() ile alinan UART tanitici
  */
 void uart_temizle(uart_handle_t tanitici);
 
 /**
- * @brief Çalışma zamanında UART baud rate'ini değiştirir.
+ * @brief Calisma zamaninda UART baud rate'ini degistirir.
  *
- * @param tanitici    uart_baslat() ile alınan UART tanıtıcısı
- * @param yeni_baud   Yeni baud rate değeri
+ * @param tanitici    uart_baslat() ile alinan UART tanitici
+ * @param yeni_baud   Yeni baud rate degeri
  */
 void uart_baud_degistir(uart_handle_t tanitici, int yeni_baud);

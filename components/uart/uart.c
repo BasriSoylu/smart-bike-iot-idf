@@ -7,8 +7,8 @@
  * Yazar         : Hasan Basri SOYLU
  * Tarih         : 08.04.2026
  *===============================================================
- * Aciklama      : UART sub-modülü implementasyonu. ESP-IDF
- *                 driver/uart.h üzerine platform bagimsiz
+ * Aciklama      : UART sub-modulu implementasyonu. ESP-IDF
+ *                 driver/uart.h uzerine platform bagimsiz
  *                 sarmalayici fonksiyonlar saglar.
  ****************************************************************/
 
@@ -33,7 +33,7 @@ uart_handle_t uart_baslat(const uart_cfg_t *yapilandirma)
     uart_driver_install(yapilandirma->port_num, yapilandirma->rx_buf_size,
                         yapilandirma->tx_buf_size, 0, NULL, 0);
 
-    ESP_LOGI(TAG, "UART%d baslatildi — %d baud", yapilandirma->port_num, yapilandirma->baud_rate);
+    ESP_LOGI(TAG, "UART%d baslatildi - %d baud", yapilandirma->port_num, yapilandirma->baud_rate);
     return yapilandirma->port_num;
 }
 

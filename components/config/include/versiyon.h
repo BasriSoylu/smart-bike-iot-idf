@@ -1,7 +1,7 @@
 #pragma once
 
 /*================================================================
- * AKTİF VERSİYON
+ * AKTIF VERSIYON
  *================================================================*/
 #define YAZILIM_VERSIYON_MAJOR  1
 #define YAZILIM_VERSIYON_MINOR  1
@@ -9,7 +9,7 @@
 #define YAZILIM_VERSIYON        "v1.1.0"
 
 /*================================================================
- * VERSİYON GEÇMİŞİ — en yeni üstte
+ * VERSIYON GECMISI - en yeni ustte
  *================================================================*/
 
 /****************************************************************
@@ -21,7 +21,7 @@
  * Yazar         : Hasan Basri SOYLU
  * Tarih         : 08.04.2026
  *===============================================================
- * Aciklama      : UART sub-modülü eklendi. Platform bagimsiz
+ * Aciklama      : UART sub-modulu eklendi. Platform bagimsiz
  *                 mimari kuruldu. uart_baslat, uart_durdur,
  *                 uart_gonder, uart_oku, uart_temizle ve
  *                 uart_baud_degistir fonksiyonlari implement
@@ -37,7 +37,7 @@
  * Yazar         : Hasan Basri SOYLU
  * Tarih         : 29.03.2026
  *===============================================================
- * Aciklama      : Ilk calisан surum. SIM800C GSM modulu ile
+ * Aciklama      : Ilk calisan surum. SIM800C GSM modulu ile
  *                 GPRS uzerinden OTA firmware guncelleme
  *                 basariyla gerceklestirildi.
  ****************************************************************/
