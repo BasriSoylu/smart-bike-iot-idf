@@ -1,17 +1,3 @@
-/****************************************************************
- * Versiyon       : v1.1.0
- * Branch         : main
- * Kullanilan SDK : ESP-IDF v5.5
- * Kullanilan IDE : Visual Studio Code
- *===============================================================
- * Yazar         : Hasan Basri SOYLU
- * Tarih         : 08.04.2026
- *===============================================================
- * Aciklama      : UART sub-modulu tip tanimlari. uart_cfg_t
- *                 yapilandirma struct'i ve uart_handle_t
- *                 tanitici tipini tanimlar.
- ****************************************************************/
-
 #pragma once
 
 #include "driver/uart.h"

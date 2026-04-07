@@ -1,17 +1,3 @@
-/****************************************************************
- * Versiyon       : v1.1.0
- * Branch         : main
- * Kullanilan SDK : ESP-IDF v5.5
- * Kullanilan IDE : Visual Studio Code
- *===============================================================
- * Yazar         : Hasan Basri SOYLU
- * Tarih         : 08.04.2026
- *===============================================================
- * Aciklama      : UART sub-modulu public API. Platform bagimsiz
- *                 mimari - uart_handle_t ile birden fazla UART
- *                 portu yonetilebilir.
- ****************************************************************/
-
 #pragma once
 
 #include "uart_types.h"
