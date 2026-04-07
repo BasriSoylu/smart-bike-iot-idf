@@ -1,0 +1,115 @@
+<mxfile host="app.diagrams.net" modified="2026-04-07T00:00:00.000Z" agent="Claude" version="21.0.0">
+  <diagram name="UART Sub-Modül Mimarisi" id="uart-arch">
+    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- ==================== BAŞLIK ==================== -->
+        <mxCell id="title" value="UART Sub-Modül Mimarisi" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=20;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="490" y="30" width="500" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== main.c ==================== -->
+        <mxCell id="main_box" value="main.c" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;fontStyle=1;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="80" y="100" width="240" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="main_content" value="uart_cfg_t cfg = {&#xa;  .port    = UART_NUM_2,&#xa;  .tx_pin  = 17,&#xa;  .rx_pin  = 16,&#xa;  .baud    = 115200&#xa;};&#xa;&#xa;uart_handle_t h = uart_init(&amp;cfg);" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=11;fontFamily=Courier New;" vertex="1" parent="1">
+          <mxGeometry x="88" y="130" width="224" height="120" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== UART SUB-MODÜL (büyük kutu) ==================== -->
+        <mxCell id="uart_module" value="&lt;b&gt;components/uart&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=14;fontStyle=1;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="420" y="100" width="620" height="420" as="geometry" />
+        </mxCell>
+
+        <!-- uart_types.h kutusu -->
+        <mxCell id="uart_types" value="uart_types.h" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;fontStyle=1;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="440" y="140" width="240" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="uart_types_content" value="typedef struct {&#xa;  uart_port_t  port;&#xa;  int          tx_pin;&#xa;  int          rx_pin;&#xa;  int          baud_rate;&#xa;  int          rx_buf_size;&#xa;  int          tx_buf_size;&#xa;} uart_cfg_t;&#xa;&#xa;typedef uart_port_t uart_handle_t;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=11;fontFamily=Courier New;" vertex="1" parent="1">
+          <mxGeometry x="446" y="166" width="228" height="126" as="geometry" />
+        </mxCell>
+
+        <!-- uart.h kutusu -->
+        <mxCell id="uart_h" value="uart.h  —  Public API" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;fontStyle=1;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="700" y="140" width="320" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="uart_h_content" value="#include &quot;uart_types.h&quot;&#xa;&#xa;uart_handle_t  uart_init   (const uart_cfg_t *cfg);&#xa;void           uart_deinit (uart_handle_t h);&#xa;&#xa;int  uart_write (uart_handle_t h,&#xa;                 const uint8_t *data,&#xa;                 int len);&#xa;&#xa;int  uart_read  (uart_handle_t h,&#xa;                 uint8_t *buf,&#xa;                 int max_len,&#xa;                 uint32_t timeout_ms);&#xa;&#xa;void uart_flush (uart_handle_t h);" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=11;fontFamily=Courier New;" vertex="1" parent="1">
+          <mxGeometry x="706" y="166" width="308" height="168" as="geometry" />
+        </mxCell>
+
+        <!-- uart.c kutusu -->
+        <mxCell id="uart_c" value="uart.c  —  İmplementasyon" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;fontStyle=1;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="440" y="330" width="560" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="uart_c_content" value="uart_handle_t uart_init(const uart_cfg_t *cfg)&#xa;  → uart_param_config()&#xa;  → uart_set_pin()&#xa;  → uart_driver_install()&#xa;  → return cfg-&gt;port   (handle = port numarası)&#xa;&#xa;uart_write()  → uart_write_bytes()&#xa;uart_read()   → uart_read_bytes()&#xa;uart_flush()  → uart_flush_input()&#xa;uart_deinit() → uart_driver_delete()" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=11;fontFamily=Courier New;" vertex="1" parent="1">
+          <mxGeometry x="448" y="356" width="544" height="138" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== ESP-IDF driver/uart.h ==================== -->
+        <mxCell id="espidf_box" value="ESP-IDF&#xa;driver/uart.h" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="520" y="580" width="220" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== sim800c sub-modülü (önizleme) ==================== -->
+        <mxCell id="sim800c_box" value="components/sim800c  (sonraki adım)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;fontSize=13;fontStyle=1;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="1120" y="100" width="340" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="sim800c_content" value="#include &quot;uart.h&quot;&#xa;&#xa;typedef struct {&#xa;  uart_handle_t uart;   // dışarıdan verilir&#xa;  int           default_baud;&#xa;  int           target_baud;&#xa;} sim800c_handle_t;&#xa;&#xa;esp_err_t sim800c_init(&#xa;    sim800c_handle_t *dev,&#xa;    uart_handle_t uart);" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=11;fontFamily=Courier New;" vertex="1" parent="1">
+          <mxGeometry x="1128" y="130" width="324" height="162" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== OKLAR ==================== -->
+
+        <!-- main.c → uart_init() çağırır (uart.h) -->
+        <mxCell id="arrow_main_uart" value="uart_init(&amp;cfg)&#xa;→ handle alır" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.4;entryDx=0;entryDy=0;strokeColor=#6c8ebf;fontColor=#6c8ebf;fontStyle=1;fontSize=11;" edge="1" parent="1" source="main_box" target="uart_h">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- uart.c → ESP-IDF bağımlılığı -->
+        <mxCell id="arrow_uartc_espidf" value="#include driver/uart.h" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeColor=#9673a6;fontColor=#9673a6;fontStyle=2;fontSize=11;" edge="1" parent="1" source="uart_c" target="espidf_box">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- uart.h → uart_types.h bağımlılığı -->
+        <mxCell id="arrow_uarth_types" value="#include" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#d6b656;fontColor=#d6b656;fontStyle=2;fontSize=11;" edge="1" parent="1" source="uart_h" target="uart_types">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- main.c → sim800c_init(handle) -->
+        <mxCell id="arrow_main_sim" value="sim800c_init(dev, handle)&#xa;handle'ı verir" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.3;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#666666;fontColor=#666666;fontStyle=2;fontSize=11;dashed=1;" edge="1" parent="1" source="main_box" target="sim800c_box">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="380" y="148" />
+              <mxPoint x="380" y="200" />
+              <mxPoint x="1120" y="200" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- sim800c → uart.h kullanır -->
+        <mxCell id="arrow_sim_uart" value="uart_write / uart_read&#xa;uart_flush kullanır" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.3;entryDx=0;entryDy=0;strokeColor=#666666;fontColor=#333333;fontStyle=2;fontSize=11;dashed=1;" edge="1" parent="1" source="sim800c_box" target="uart_h">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== AÇIKLAMA KUTUSU ==================== -->
+        <mxCell id="legend_box" value="Tasarım Prensipleri" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;fontStyle=1;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="1120" y="340" width="340" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_content" value="✔ UART modülü SIM800C'yi bilmez&#xa;✔ SIM800C UART pin/port bilmez&#xa;✔ Dependency Injection: handle verilir&#xa;✔ uart_handle_t = uart_port_t (ESP-IDF)&#xa;✔ Tek sorumluluk: her modül kendi işi&#xa;&#xa;Karşılaştırma (STM32):&#xa;uart_handle_t  ≈  UART_HandleTypeDef*&#xa;uart_init()    ≈  HAL_UART_Init()&#xa;uart_write()   ≈  HAL_UART_Transmit()" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1128" y="366" width="324" height="146" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== AKIŞ OKLARI (renk açıklaması) ==================== -->
+        <mxCell id="flow_title" value="Başlatma Akışı (main.c içinde):" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="310" width="280" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="flow_steps" value="1. uart_cfg_t cfg = { port, pins, baud }&#xa;2. uart_handle_t h = uart_init(&amp;cfg)&#xa;3. sim800c_init(&amp;gsm_dev, h)&#xa;4. sim800c_connect(&amp;gsm_dev)&#xa;5. ota_check(&amp;gsm_dev)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=11;fontFamily=Courier New;" vertex="1" parent="1">
+          <mxGeometry x="80" y="345" width="280" height="100" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

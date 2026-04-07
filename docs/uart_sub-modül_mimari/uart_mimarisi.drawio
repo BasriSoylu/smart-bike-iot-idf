@@ -1,0 +1,140 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/26.0.9 Chrome/128.0.6613.186 Electron/32.2.5 Safari/537.36" version="26.0.9">
+  <diagram name="UART Sub-Modül Mimarisi" id="uart-arch">
+    <mxGraphModel dx="3088" dy="2013" grid="1" gridSize="5" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="nt2b4anpcn0M_4nPq0Y0-15" value="&lt;b&gt;&lt;font style=&quot;font-size: 20px;&quot;&gt;Dahil Edilecek Kütüphaneler&lt;/font&gt;&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=14;fontStyle=1;verticalAlign=top;arcSize=7;fontColor=#333333;" parent="1" vertex="1">
+          <mxGeometry x="509" y="715" width="620" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="nt2b4anpcn0M_4nPq0Y0-14" value="&lt;span style=&quot;font-size: 22px;&quot;&gt;Kullanım Kılavuzu&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=14;fontStyle=1;verticalAlign=top;arcSize=7;" parent="1" vertex="1">
+          <mxGeometry x="-80" y="-270" width="460" height="400" as="geometry" />
+        </mxCell>
+        <mxCell id="nt2b4anpcn0M_4nPq0Y0-12" value="&lt;font style=&quot;font-size: 22px;&quot;&gt;Uygulama Katmanı&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#82b366;fontSize=14;fontStyle=1;verticalAlign=top;arcSize=7;" parent="1" vertex="1">
+          <mxGeometry x="440" y="-260" width="760" height="340" as="geometry" />
+        </mxCell>
+        <mxCell id="uart_module" value="&lt;b&gt;&lt;font style=&quot;font-size: 22px;&quot;&gt;components/uart&lt;/font&gt;&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=14;fontStyle=1;verticalAlign=top;arcSize=7;" parent="1" vertex="1">
+          <mxGeometry x="435" y="95" width="765" height="605" as="geometry" />
+        </mxCell>
+        <mxCell id="uart_types" value="uart_types.h" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;fontStyle=1;verticalAlign=top;arcSize=6;" parent="1" vertex="1">
+          <mxGeometry x="455" y="135" width="315" height="270" as="geometry" />
+        </mxCell>
+        <mxCell id="uart_types_content" value="&lt;b&gt;&lt;font style=&quot;font-size: 12px;&quot;&gt;typedef struct {&lt;br&gt;&amp;nbsp;uart_port_t           port_num;&lt;br&gt;&amp;nbsp;int                   tx_pin;&lt;br&gt;&amp;nbsp;int                   rx_pin;&lt;br&gt;&amp;nbsp;int                   baud_rate;&lt;br&gt;&amp;nbsp;int                   rx_buf_size;&lt;br&gt;&amp;nbsp;int                   tx_buf_size;&lt;br&gt;&amp;nbsp;uart_word_length_t    veri_bitleri;&lt;br&gt;&amp;nbsp;uart_parity_t         parity;&lt;br&gt;&amp;nbsp;uart_stop_bits_t      stop_bitleri;&lt;br&gt;&amp;nbsp;uart_hw_flowcontrol_t akis_kontrolu;&lt;br&gt;} uart_cfg_t;&lt;br&gt;&lt;br&gt;typedef uart_port_t uart_handle_t;&lt;/font&gt;&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=11;fontFamily=Courier New;" parent="1" vertex="1">
+          <mxGeometry x="465" y="160" width="260" height="235" as="geometry" />
+        </mxCell>
+        <mxCell id="P3zYaeov4qYgkOuGW3Sw-2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fillColor=#f8cecc;strokeColor=#b85450;strokeWidth=2;curved=0;labelBackgroundColor=none;fontColor=default;" edge="1" parent="1" source="uart_h" target="uart_c">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="P3zYaeov4qYgkOuGW3Sw-3" value="&lt;font style=&quot;font-size: 13px;&quot;&gt;&lt;b&gt;#include&lt;/b&gt;&lt;/font&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];labelBackgroundColor=none;fontColor=#B85450;" vertex="1" connectable="0" parent="P3zYaeov4qYgkOuGW3Sw-2">
+          <mxGeometry x="-0.4031" y="1" relative="1" as="geometry">
+            <mxPoint x="-28" y="-12" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="uart_h" value="uart.h  —  Public API" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;fontStyle=1;verticalAlign=top;arcSize=4;" parent="1" vertex="1">
+          <mxGeometry x="810" y="135" width="375" height="305" as="geometry" />
+        </mxCell>
+        <mxCell id="uart_h_content" value="&lt;b&gt;&lt;font style=&quot;font-size: 12px;&quot;&gt;#include &quot;uart_types.h&quot;&lt;br&gt;&lt;br&gt;uart_handle_t uart_baslat       (const uart_cfg_t *yapilandirma);&lt;br&gt;void          uart_durdur       (uart_handle_t tanitici);&lt;br&gt;&lt;br&gt;int           uart_gonder       (uart_handle_t tanitici,&lt;br&gt;                                  const uint8_t *veri,&lt;br&gt;                                  int uzunluk);&lt;br&gt;&lt;br&gt;int           uart_oku          (uart_handle_t tanitici,&lt;br&gt;                                  uint8_t *tampon,&lt;br&gt;                                  int maks_uzunluk,&lt;br&gt;                                  uint32_t zaman_asimi_ms);&lt;br&gt;&lt;br&gt;void          uart_temizle      (uart_handle_t tanitici);&lt;br&gt;void          uart_baud_degistir(uart_handle_t tanitici,&lt;br&gt;                                  int yeni_baud);&lt;/font&gt;&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=11;fontFamily=Courier New;" parent="1" vertex="1">
+          <mxGeometry x="812" y="160" width="368" height="275" as="geometry" />
+        </mxCell>
+        <mxCell id="espidf_box" value="ESP-IDF&#xa;driver/uart.h" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=13;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="709" y="755" width="220" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="arrow_main_uart" value="&lt;span&gt;&lt;font style=&quot;color: rgb(0, 0, 0); font-size: 13px;&quot;&gt;uart_baslat(&amp;amp;yapilandirma)&lt;br&gt;→ tanıtıcı alır&lt;/font&gt;&lt;/span&gt;" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeColor=#6c8ebf;fontColor=#6c8ebf;fontStyle=1;fontSize=11;startArrow=classic;startFill=1;endArrow=none;labelBackgroundColor=none;strokeWidth=2;" parent="1" source="main_box" target="uart_h" edge="1">
+          <mxGeometry x="-0.3707" y="45" relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="570" y="65" />
+              <mxPoint x="1002" y="65" />
+              <mxPoint x="1002" y="135" />
+            </Array>
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="arrow_uartc_espidf" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;&lt;b&gt;#include driver/uart.h&lt;/b&gt;&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#9673a6;fontColor=#9673a6;fontStyle=2;fontSize=11;startArrow=classic;startFill=1;endArrow=none;strokeWidth=2;labelBackgroundColor=none;" parent="1" source="uart_c" target="espidf_box" edge="1">
+          <mxGeometry x="-0.3316" y="-15" relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="820" y="695" />
+              <mxPoint x="640" y="695" />
+              <mxPoint x="640" y="795" />
+            </Array>
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="arrow_uarth_types" value="&lt;font style=&quot;font-size: 13px;&quot;&gt;&lt;b&gt;#include&lt;/b&gt;&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.001;exitY=0.922;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;strokeColor=#d6b656;fontColor=#d6b656;fontStyle=2;fontSize=12;exitPerimeter=0;labelBackgroundColor=none;startArrow=classic;startFill=1;endArrow=none;strokeWidth=2;" parent="1" source="uart_h" target="uart_types" edge="1">
+          <mxGeometry x="0.0807" y="7" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="arrow_main_sim" value="&lt;span&gt;&lt;b&gt;&lt;font style=&quot;font-size: 10px;&quot;&gt;fonksiyon pointer&#39;larını bağlar&lt;br&gt;(.write=_wr, .read=_rd, .ctx=h)&lt;/font&gt;&lt;/b&gt;&lt;/span&gt;" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#666666;fontColor=#666666;fontStyle=2;fontSize=12;dashed=1;startArrow=classic;startFill=1;endArrow=none;labelBackgroundColor=none;strokeWidth=2;" parent="1" source="main_box" target="sim800c_box" edge="1">
+          <mxGeometry x="-0.0047" y="-16" relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="690" y="-97" />
+              <mxPoint x="850" y="-97" />
+            </Array>
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="arrow_sim_uart" value="&lt;font style=&quot;font-size: 13px;&quot;&gt;&lt;b&gt;dev-&amp;gt;write() / dev-&amp;gt;read()&lt;br&gt;dev-&amp;gt;flush()&lt;br&gt;&lt;/b&gt;&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeColor=#666666;fontColor=#333333;fontStyle=2;fontSize=11;dashed=1;endArrow=none;startFill=1;startArrow=classic;labelBackgroundColor=none;strokeWidth=2;" parent="1" source="sim800c_box" target="uart_h" edge="1">
+          <mxGeometry x="-0.7136" y="90" relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1020" y="65" />
+              <mxPoint x="1002" y="65" />
+              <mxPoint x="1002" y="135" />
+            </Array>
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="nt2b4anpcn0M_4nPq0Y0-1" value="" style="group" parent="1" vertex="1" connectable="0">
+          <mxGeometry x="450" y="-176" width="255" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="main_box" value="main.c" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;fontStyle=1;verticalAlign=top;" parent="nt2b4anpcn0M_4nPq0Y0-1" vertex="1">
+          <mxGeometry width="240" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="main_content" value="&lt;b&gt;&lt;font&gt;uart_cfg_t yapilandirma = {&lt;br&gt;  .port_num    = UART_NUM_2,&lt;br&gt;  .tx_pin      = 17,&lt;br&gt;  .rx_pin      = 16,&lt;br&gt;  .baud_rate   = 115200&lt;br&gt;};&lt;br&gt;&lt;br&gt;uart_handle_t tanitici = uart_baslat(&amp;amp;yapilandirma);&lt;/font&gt;&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=11;fontFamily=Courier New;" parent="nt2b4anpcn0M_4nPq0Y0-1" vertex="1">
+          <mxGeometry x="8" y="22" width="227" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="nt2b4anpcn0M_4nPq0Y0-2" value="" style="group" parent="1" vertex="1" connectable="0">
+          <mxGeometry x="850" y="-220" width="340" height="255" as="geometry" />
+        </mxCell>
+        <mxCell id="fCZ2ApCISgf3IPgpFfXO-2" value="" style="group" parent="nt2b4anpcn0M_4nPq0Y0-2" vertex="1" connectable="0">
+          <mxGeometry width="340" height="254.99999999999997" as="geometry" />
+        </mxCell>
+        <mxCell id="sim800c_box" value="components/sim800c  (sonraki adım)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;fontSize=13;fontStyle=1;verticalAlign=top;" parent="fCZ2ApCISgf3IPgpFfXO-2" vertex="1">
+          <mxGeometry width="340" height="245" as="geometry" />
+        </mxCell>
+        <mxCell id="sim800c_content" value="&lt;b&gt;typedef int  (*write_fn_t)(void *ctx,&lt;br&gt;               const uint8_t *data, int len);&lt;br&gt;typedef int  (*read_fn_t) (void *ctx,&lt;br&gt;               uint8_t *buf, int len,&lt;br&gt;               uint32_t timeout_ms);&lt;br&gt;typedef void (*flush_fn_t)(void *ctx);&lt;br&gt;&lt;br&gt;typedef struct {&lt;br&gt;  write_fn_t  write;  // fonksiyon pointer&lt;br&gt;  read_fn_t   read;&amp;nbsp; &amp;nbsp;// fonksiyon pointer&lt;br&gt;  flush_fn_t  flush;  // fonksiyon pointer&lt;br&gt;  void       *ctx;    // uart handle buraya&lt;br&gt;} sim800c_handle_t;&lt;br&gt;&lt;br&gt;esp_err_t sim800c_init(sim800c_handle_t *dev);&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=11;fontFamily=Courier New;" parent="fCZ2ApCISgf3IPgpFfXO-2" vertex="1">
+          <mxGeometry x="8" y="22.25" width="324" height="206.54999999999998" as="geometry" />
+        </mxCell>
+        <mxCell id="nt2b4anpcn0M_4nPq0Y0-10" value="" style="group" parent="1" vertex="1" connectable="0">
+          <mxGeometry x="-60" y="-60" width="425" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_box" value="Tasarım Prensipleri" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;fontStyle=1;verticalAlign=top;container=0;" parent="nt2b4anpcn0M_4nPq0Y0-10" vertex="1">
+          <mxGeometry width="425" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_content" value="&lt;font style=&quot;font-size: 12px;&quot; face=&quot;Courier New&quot;&gt;&lt;b&gt;✔ UART modülü SIM800C&#39;yi bilmez&lt;br&gt;✔ SIM800C uart.h&#39;ı include ETMEZ&lt;br&gt;✔ SIM800C pin/port bilmez&lt;br&gt;✔ Bağlama (wiring) sadece main.c&#39;de&lt;br&gt;✔ Fonksiyon pointer = interface / vtable&lt;br&gt;&lt;br&gt;Karşılaştırma (STM32 / OOP):&lt;br&gt;write_fn_t     ≈  sanal fonksiyon&lt;br&gt;sim800c.ctx    ≈  this pointer&lt;br&gt;uart_baslat()  ≈  HAL_UART_Init()&lt;/b&gt;&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=11;container=0;" parent="nt2b4anpcn0M_4nPq0Y0-10" vertex="1">
+          <mxGeometry x="10" y="20" width="405" height="146" as="geometry" />
+        </mxCell>
+        <mxCell id="nt2b4anpcn0M_4nPq0Y0-11" value="" style="group" parent="1" vertex="1" connectable="0">
+          <mxGeometry x="-60" y="-230" width="430" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="nt2b4anpcn0M_4nPq0Y0-7" value="&lt;span style=&quot;text-align: left;&quot;&gt;Başlatma Akışı (main.c içinde):&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;fontStyle=1;verticalAlign=top;container=0;" parent="nt2b4anpcn0M_4nPq0Y0-11" vertex="1">
+          <mxGeometry width="425.1136363636364" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="flow_steps" value="&lt;b&gt;&lt;font style=&quot;font-size: 12px;&quot;&gt;1. uart_cfg_t yapilandirma = { port, pinler, baud }&lt;br&gt;2. uart_handle_t tanitici = uart_baslat(&amp;amp;yapilandirma)&lt;br&gt;3. sim800c_handle_t gsm = {&lt;br&gt;&amp;nbsp; &amp;nbsp; .yaz=_yaz, .oku=_oku,&lt;br&gt;&amp;nbsp; &amp;nbsp; .temizle=_temizle, .baglan=(void*)tanitici }&lt;br&gt;4. sim800c_baslat(&amp;amp;gsm)&lt;br&gt;5. sim800c_gprs_baglan(&amp;amp;gsm)&lt;br&gt;6. ota_kontrol_et(&amp;amp;gsm)&lt;/font&gt;&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=11;fontFamily=Courier New;container=0;" parent="nt2b4anpcn0M_4nPq0Y0-11" vertex="1">
+          <mxGeometry x="19.545454545454547" y="22.15" width="410.45454545454544" height="123.85" as="geometry" />
+        </mxCell>
+        <mxCell id="nt2b4anpcn0M_4nPq0Y0-13" value="&lt;span style=&quot;color: rgb(0, 0, 0); font-family: Helvetica; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 700; letter-spacing: normal; orphans: 2; text-align: center; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space: normal; background-color: rgb(251, 251, 251); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; float: none; display: inline !important;&quot;&gt;&lt;font style=&quot;font-size: 33px;&quot;&gt;UART Sub-Modül Mimarisi&lt;/font&gt;&lt;/span&gt;" style="text;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="548" y="-340" width="440" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="P3zYaeov4qYgkOuGW3Sw-1" value="" style="group" vertex="1" connectable="0" parent="1">
+          <mxGeometry x="525" y="502" width="590" height="165" as="geometry" />
+        </mxCell>
+        <mxCell id="uart_c" value="uart.c  —  İmplementasyon" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;fontStyle=1;verticalAlign=top;" parent="P3zYaeov4qYgkOuGW3Sw-1" vertex="1">
+          <mxGeometry width="590" height="165" as="geometry" />
+        </mxCell>
+        <mxCell id="uart_c_content" value="&lt;font style=&quot;font-size: 12px;&quot;&gt;&lt;b&gt;uart_baslat()        → uart_param_config(), uart_set_pin(), uart_driver_install()&lt;br&gt;                          return yapilandirma-&amp;gt;port_num  (tanıtıcı = port numarası)&lt;br&gt;&lt;br&gt;uart_gonder()        → uart_write_bytes()&lt;br&gt;uart_oku()           → uart_read_bytes()&lt;br&gt;uart_temizle()       → uart_flush_input()&lt;br&gt;uart_durdur()        → uart_driver_delete()&lt;br&gt;uart_baud_degistir() → uart_set_baudrate()&lt;/b&gt;&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=11;fontFamily=Courier New;" parent="P3zYaeov4qYgkOuGW3Sw-1" vertex="1">
+          <mxGeometry x="5" y="22" width="578" height="130" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
