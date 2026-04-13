@@ -24,6 +24,7 @@
  * Aciklama      : Versiyon blogu sadece .c dosyalarinda olur
  *                 kurali belirlendi. uart.h ve uart_types.h
  *                 dosyalarindan baslık blogu kaldirildi.
+ ****************************************************************/
 
 /****************************************************************
  * Versiyon       : v1.1.0

@@ -1,17 +1,3 @@
-/****************************************************************
- * Versiyon       : v1.1.0
- * Branch         : main
- * Kullanilan SDK : ESP-IDF v5.5
- * Kullanilan IDE : Visual Studio Code
- *===============================================================
- * Yazar         : Hasan Basri SOYLU
- * Tarih         : 08.04.2026
- *===============================================================
- * Aciklama      : UART sub-modulu implementasyonu. ESP-IDF
- *                 driver/uart.h uzerine platform bagimsiz
- *                 sarmalayici fonksiyonlar saglar.
- ****************************************************************/
-
 #include "uart.h"
 #include "esp_log.h"
 
