@@ -4,13 +4,28 @@
  * AKTIF VERSIYON
  *================================================================*/
 #define YAZILIM_VERSIYON_MAJOR  1
-#define YAZILIM_VERSIYON_MINOR  1
-#define YAZILIM_VERSIYON_PATCH  1
-#define YAZILIM_VERSIYON        "v1.1.1"
+#define YAZILIM_VERSIYON_MINOR  2
+#define YAZILIM_VERSIYON_PATCH  0
+#define YAZILIM_VERSIYON        "v1.2.0"
 
 /*================================================================
  * VERSIYON GECMISI - en yeni ustte
  *================================================================*/
+
+/*******************************************************************
+ * Versiyon       : v1.2.0
+ * Branch         : main
+ * Kullanilan SDK : ESP-IDF v5.5
+ * Kullanilan IDE : Visual Studio Code
+ *=================================================================
+* Yazar           : Hasan Basri SOYLU
+* Tarih           : 13.04.2026
+*==================================================================
+* Aciklama        : sim800c component eklendi. Dependency Injection
+*                   mimarisi ile AT komut surucu yazildi. FreeRTOS
+*                   reader task, state machine ve overflow korumasi
+*                   implement edildi.
+*******************************************************************/
 
 /****************************************************************
  * Versiyon       : v1.1.1
