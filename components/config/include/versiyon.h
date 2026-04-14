@@ -5,12 +5,28 @@
  *================================================================*/
 #define YAZILIM_VERSIYON_MAJOR  1
 #define YAZILIM_VERSIYON_MINOR  2
-#define YAZILIM_VERSIYON_PATCH  0
-#define YAZILIM_VERSIYON        "v1.2.0"
+#define YAZILIM_VERSIYON_PATCH  1
+#define YAZILIM_VERSIYON        "v1.2.1"
 
 /*================================================================
  * VERSIYON GECMISI - en yeni ustte
  *================================================================*/
+
+/*******************************************************************
+ * Versiyon       : v1.2.1
+ * Branch         : main
+ * Kullanilan SDK : ESP-IDF v5.5
+ * Kullanilan IDE : Visual Studio Code
+ *=================================================================
+* Yazar           : Hasan Basri SOYLU
+* Tarih           : 15.04.2026
+*==================================================================
+* Aciklama        : sim800c_gprs_connect() implement edildi.
+*                   GPRS baglanti akisi: AT+CGATT + AT+SAPBR
+*                   serisi (close/type/apn/start/query).
+*                   Atik yorum temizlendi. Eksikler not alindi:
+*                   APN Kconfig, IP parsing, disconnect/http/mqtt.
+*******************************************************************/
 
 /*******************************************************************
  * Versiyon       : v1.2.0

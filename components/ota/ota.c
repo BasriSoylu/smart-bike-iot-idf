@@ -84,8 +84,8 @@ int ota_check_and_update(void)
     int chunk_num = 0;
 
     while (1) {
-        ret = gsm_http_get_binary(OTA_FIRMWARE_URL, offset, chunk_buf,
-                                   OTA_CHUNK_SIZE, &chunk_len, &total_len);
+        ret = gsm_http_get_binary(  OTA_FIRMWARE_URL, offset, chunk_buf,
+                                    OTA_CHUNK_SIZE, &chunk_len, &total_len);
         if (ret != 0) {
             ESP_LOGE(TAG, "Chunk indirme hatasi (offset=%d)", offset);
             esp_ota_abort(ota_handle);

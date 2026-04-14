@@ -44,6 +44,18 @@ Aktif versiyon her zaman `components/config/include/versiyon.h` dosyasinda takip
 
 ## Versiyon Gecmisi
 
+### v1.2.1 - 15.04.2026
+- `sim800c_gprs_connect()` implement edildi
+- GPRS baglanti akisi: AT+CGATT + AT+SAPBR serisi (bearer kapat/tip/APN/baslat/sorgula)
+- Atik yorum temizlendi
+- Eksik implementasyonlar (gprs_disconnect, http_get_json, http_get_binary, mqtt_publish) dokumante edildi
+
+### v1.2.0 - 13.04.2026
+- `sim800c` component eklendi
+- Dependency Injection mimarisi ile AT komut surucu yazildi
+- FreeRTOS reader task, state machine (IDLE/ECHO_BEKLE/CEVAP_BEKLE/CEVAP_HAZIR/HATA) ve overflow korumasi implement edildi
+- `sim800c_baslat()` ile baud rate otomatik ayarlama (9600 ↔ 115200)
+
 ### v1.1.0 - 08.04.2026
 - UART sub-modulu eklendi (`components/uart/`)
 - Platform bagimsiz mimari kuruldu (fonksiyon pointer ile dependency injection)
