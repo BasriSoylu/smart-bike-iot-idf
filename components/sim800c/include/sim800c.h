@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include "config.h"
 
 #define SIM800C_VERI_VAR           (1U)
 #define SIM800C_HEDEF_BAUD_RATE    (115200U)
@@ -22,9 +23,7 @@ typedef struct {
 typedef enum {
     SIM800C_IDLE       ,  // Komut bekleniyor
     SIM800C_ECHO_BEKLE ,  // Echo dönmesi bekleniyor
-    SIM800C_CEVAP_BEKLE,  // OK / ERROR bekleniyor
-    SIM800C_CEVAP_HAZIR,  // Cevap hazır, işlenebilir
-    SIM800C_HATA       ,  // Hata durumu
+    SIM800C_CEVAP_BEKLE,  // Cevap satırları bekleniyor (beklenen string gelene kadar)
 } sim800c_state_t;
 
 /* ── Public API ─────────────────────────────────────────────────── */

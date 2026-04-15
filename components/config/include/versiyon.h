@@ -4,13 +4,30 @@
  * AKTIF VERSIYON
  *================================================================*/
 #define YAZILIM_VERSIYON_MAJOR  1
-#define YAZILIM_VERSIYON_MINOR  2
-#define YAZILIM_VERSIYON_PATCH  1
-#define YAZILIM_VERSIYON        "v1.2.1"
+#define YAZILIM_VERSIYON_MINOR  3
+#define YAZILIM_VERSIYON_PATCH  0
+#define YAZILIM_VERSIYON        "v1.3.0"
 
 /*================================================================
  * VERSIYON GECMISI - en yeni ustte
  *================================================================*/
+
+/*******************************************************************
+ * Versiyon       : v1.3.0
+ * Branch         : main
+ * Kullanilan SDK : ESP-IDF v5.5
+ * Kullanilan IDE : Visual Studio Code
+ *=================================================================
+* Yazar           : Hasan Basri SOYLU
+* Tarih           : 16.04.2026
+*==================================================================
+* Aciklama        : sim800c mimarisi yeniden tasarlandi. cmd_wait
+*                   "beklenen" parametresi eklendi, process_line
+*                   sadeleştirildi. sim800c_gprs_disconnect(),
+*                   sim800c_http_get_json() implement edildi.
+*                   Thread safety (portMUX), BEKLE_x_SN makrolari,
+*                   AT_BEARER_SET_CONTYPE, AT_GPRS_DETACH eklendi.
+*******************************************************************/
 
 /*******************************************************************
  * Versiyon       : v1.2.1

@@ -1,6 +1,13 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+// Genel bekleme süreleri (ms)
+#define BEKLE_1_SN   (1000U)
+#define BEKLE_2_SN   (2000U)
+#define BEKLE_3_SN   (3000U)
+#define BEKLE_5_SN   (5000U)
+#define BEKLE_30_SN  (30000U)
+
 // Firmware versiyonu
 #define FIRMWARE_VERSION  "1.0.0"
 
