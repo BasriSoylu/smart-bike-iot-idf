@@ -4,13 +4,32 @@
  * AKTIF VERSIYON
  *================================================================*/
 #define YAZILIM_VERSIYON_MAJOR  1
-#define YAZILIM_VERSIYON_MINOR  3
+#define YAZILIM_VERSIYON_MINOR  4
 #define YAZILIM_VERSIYON_PATCH  0
-#define YAZILIM_VERSIYON        "v1.3.0"
+#define YAZILIM_VERSIYON        "v1.4.0"
 
 /*================================================================
  * VERSIYON GECMISI - en yeni ustte
  *================================================================*/
+
+/*******************************************************************
+ * Versiyon       : v1.4.0
+ * Branch         : main
+ * Kullanilan SDK : ESP-IDF v5.5
+ * Kullanilan IDE : Visual Studio Code
+ *=================================================================
+* Yazar           : Hasan Basri SOYLU
+* Tarih           : 16.04.2026
+*==================================================================
+* Aciklama        : sim800c HTTP binary indirme API'si eklendi.
+*                   sim800c_http_open / sim800c_http_read /
+*                   sim800c_http_close fonksiyonlari implement edildi.
+*                   reader_task'e sim_binary_modu flag'i eklendi,
+*                   binary okuma sirasinda task yield ediyor.
+*                   http_open_adimlari ve http_read_adimlari inner
+*                   helper + wrapper pattern ile yazildi. URC parse
+*                   sscanf ile yapildi (+HTTPACTION / +HTTPREAD).
+*******************************************************************/
 
 /*******************************************************************
  * Versiyon       : v1.3.0

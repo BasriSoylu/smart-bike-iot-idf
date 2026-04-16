@@ -29,132 +29,113 @@ typedef enum {
 /* ── Public API ─────────────────────────────────────────────────── */
 
 /****************************************************************
+ * Yazan         : Hasan Basri Soylu
  * Fonksiyon     : sim800c_init
- * Parametre     : io → uart send/read fonksiyon pointerlarini
- *                      tasıyan struct (main.c tarafindan doldurulur)
+ * Parametre     : io → UART io struct'i
  * Donus Degeri  : void
- *---------------------------------------------------------------
- * Aciklama      : SIM800C modulunu baslatir. UART baglantisi
- *                 dogrudan degil, io struct uzerinden yapilir.
- *                 (Dependency Injection)
+ * Aciklama      : SIM800C modulunu baslatir.
  ****************************************************************/
 void sim800c_init(sim800c_io_t *io);
 
 
 /****************************************************************
+ * Yazan         : Hasan Basri Soylu
  * Fonksiyon     : sim800c_baslat
  * Parametre     : void
- * Donus Degeri  : 0 → basarili, -1 → modul bulunamadi
- *---------------------------------------------------------------
- * Aciklama      : Modul ile iletisimi test eder, gerekirse
- *                 baud hizini 115200'den 9600'e gecirir.
- *                 sim800c_init() cagrisinin ARDINDAN
- *                 cagrilmalidir (reader_task hazir olmali).
+ * Donus Degeri  : 0 → basarili, -1 → hata
+ * Aciklama      : AT testi yapar, gerekirse baud hizini ayarlar.
  ****************************************************************/
 int sim800c_baslat(void);
 
+
 /****************************************************************
+ * Yazan         : Hasan Basri Soylu
  * Fonksiyon     : sim800c_send_command
- * Parametre     : cmd → gonderilecek AT komutu string'i
- *                       (at_commands.h makrolari kullanilmali)
+ * Parametre     : cmd → AT komutu
  * Donus Degeri  : void
- *---------------------------------------------------------------
- * Aciklama      : AT komutunu UART uzerinden gonderir ve state
- *                 machine'i SIM800C_ECHO_BEKLE durumuna alir.
- *                 Fonksiyon bloklanmaz, cevap state machine
- *                 tarafindan islenir.
+ * Aciklama      : AT komutunu UART uzerinden gonderir.
  ****************************************************************/
 void sim800c_send_command(const char *cmd);
 
+
 /****************************************************************
+ * Yazan         : Hasan Basri Soylu
  * Fonksiyon     : sim800c_get_state
  * Parametre     : void
- * Donus Degeri  : sim800c_state_t → mevcut state machine durumu
- *---------------------------------------------------------------
- * Aciklama      : Dis moduller (main.c vb.) bu fonksiyon ile
- *                 SIM800C'nin su anki durumunu sorgular.
- *                 Ornegin: cevap hazir mi, hata var mi?
+ * Donus Degeri  : mevcut state
+ * Aciklama      : State machine durumunu doner.
  ****************************************************************/
 sim800c_state_t sim800c_get_state(void);
 
+
 /****************************************************************
+ * Yazan         : Hasan Basri Soylu
  * Fonksiyon     : sim800c_get_response
  * Parametre     : void
- * Donus Degeri  : const char* → son gelen AT cevabinin string'i
- *---------------------------------------------------------------
- * Aciklama      : State SIM800C_CEVAP_HAZIR oldugunda bu
- *                 fonksiyon ile cevap okunur. Bir sonraki komut
- *                 gonderilene kadar buffer gecerlidir.
+ * Donus Degeri  : son AT cevabi
+ * Aciklama      : Son gelen AT cevabinin buffer'ini doner.
  ****************************************************************/
 const char *sim800c_get_response(void);
 
+
 /****************************************************************
+ * Yazan         : Hasan Basri Soylu
  * Fonksiyon     : sim800c_gprs_connect
  * Parametre     : void
  * Donus Degeri  : 0 → basarili, -1 → hata
- *---------------------------------------------------------------
- * Aciklama      : AT+CGATT, AT+SAPBR komutlari ile GPRS
- *                 baglantisinı kurar. Basarili bağlantida
- *                 modeme bir IP adresi atanmis olur.
+ * Aciklama      : GPRS baglantisini kurar.
  ****************************************************************/
 int sim800c_gprs_connect(void);
 
+
 /****************************************************************
+ * Yazan         : Hasan Basri Soylu
  * Fonksiyon     : sim800c_gprs_disconnect
  * Parametre     : void
  * Donus Degeri  : 0 → basarili, -1 → hata
- *---------------------------------------------------------------
- * Aciklama      : AT+SAPBR=0,1 komutu ile aktif GPRS bearer'i
- *                 kapatir. Dusuk guc moduna gecmeden once
- *                 cagrilmalidir.
+ * Aciklama      : Aktif GPRS bearer'ini kapatir.
  ****************************************************************/
 int sim800c_gprs_disconnect(void);
 
+
 /****************************************************************
+ * Yazan         : Hasan Basri Soylu
  * Fonksiyon     : sim800c_http_get_json
- * Parametre     : url     → hedef URL (null-terminated string)
- *                 out_buf → JSON verisinin yazilacagi buffer
- *                 out_max → buffer maksimum boyutu (byte)
- * Donus Degeri  : okunan byte sayisi, hata durumunda -1
- *---------------------------------------------------------------
- * Aciklama      : AT+HTTPINIT / AT+HTTPACTION / AT+HTTPREAD
- *                 komutlari ile HTTP GET isteği atar ve kucuk
- *                 metin yaniti (version.json gibi) alir.
- *                 Islem sonunda HTTP stack kapatilir.
+ * Parametre     : url, out_buf, out_max
+ * Donus Degeri  : okunan byte, hata durumunda -1
+ * Aciklama      : HTTP GET ile kucuk metin/JSON alir.
  ****************************************************************/
 int sim800c_http_get_json(const char *url, char *out_buf, int out_max);
 
-/****************************************************************
- * Fonksiyon     : sim800c_http_get_binary
- * Parametre     : url        → hedef URL (null-terminated string)
- *                 offset     → dosyada baslangic konumu (byte)
- *                 out_buf    → verinin yazilacagi buffer
- *                 chunk_size → tek seferde okunacak max byte
- *                 out_len    → bu cagride okunan byte sayisi
- *                 total_len  → dosyanin toplam boyutu
- *                              (sadece offset=0 da doldurulur)
- * Donus Degeri  : 0 → basarili, -1 → hata
- *---------------------------------------------------------------
- * Aciklama      : Buyuk binary dosyalari (firmware.bin) chunk
- *                 chunk indirmek icin kullanilir. offset=0 da
- *                 HTTP baglantisi kurulur, sonraki cagrılarda
- *                 ayni baglanti uzerinden okuma devam eder.
- ****************************************************************/
-int sim800c_http_get_binary(const char *url, int offset,
-                            uint8_t *out_buf, int chunk_size,
-                            int *out_len, int *total_len);
 
 /****************************************************************
- * Fonksiyon     : sim800c_mqtt_publish
- * Parametre     : topic → mesajin yayinlanacagi MQTT topic
- *                 msg   → yayinlanacak mesaj (null-terminated)
- *                 qos   → kalite seviyesi (0, 1 veya 2)
+ * Yazan         : Hasan Basri Soylu
+ * Fonksiyon     : sim800c_http_open
+ * Parametre     : url, total_len (out)
  * Donus Degeri  : 0 → basarili, -1 → hata
- *---------------------------------------------------------------
- * Aciklama      : AT+CIPSTART ile TCP baglantisi kurarak MQTT
- *                 PUBLISH paketi gonderir. gsm_io_t uzerinden
- *                 cagrilir; dogrudan kullanilmamalidir.
+ * Aciklama      : HTTP oturumunu acar, icerik boyutunu doldurur.
  ****************************************************************/
-int sim800c_mqtt_publish(const char *topic, const char *msg, int qos);
+int sim800c_http_open(const char *url, int *total_len);
+
+
+/****************************************************************
+ * Yazan         : Hasan Basri Soylu
+ * Fonksiyon     : sim800c_http_read
+ * Parametre     : offset, out_buf, size, out_len (out)
+ * Donus Degeri  : 0 → basarili, -1 → hata
+ * Aciklama      : Acik HTTP oturumundan binary chunk okur.
+ ****************************************************************/
+int sim800c_http_read(int offset, uint8_t *out_buf, int size, int *out_len);
+
+
+/****************************************************************
+ * Yazan         : Hasan Basri Soylu
+ * Fonksiyon     : sim800c_http_close
+ * Parametre     : void
+ * Donus Degeri  : 0 → basarili, -1 → hata
+ * Aciklama      : HTTP oturumunu kapatir.
+ ****************************************************************/
+int sim800c_http_close(void);
+
 
 #endif /* SIM800C_H */

@@ -12,17 +12,21 @@
 * Modül dışından erişilemez, sadece bu .c içinde kullanılır.
 * STM32'de global değişkeni static yapmak gibi düşün.
 * -------------------------------------------------------------- */
-static sim800c_io_t            *sim_arayuz  = NULL                        ;   // inject edilen uart arayüzü
-static volatile sim800c_state_t sim_durum   = SIM800C_IDLE                ;   // mevcut state (volatile: iki task aynı anda okur/yazar)
-static char                     sim_cevap[4096]                           ;   // gelen tüm satırlar (her komut öncesi sıfırlanır)
-static char                     sim_son_komut[128]                        ;   // gönderilen son komut (echo karşılaştırması için)
-static portMUX_TYPE             sim_mux     = portMUX_INITIALIZER_UNLOCKED;   // critical section kilidi (dual-core koruması)
+static sim800c_io_t            *sim_arayuz         = NULL                        ;   // inject edilen uart arayüzü
+static volatile sim800c_state_t sim_durum          = SIM800C_IDLE                ;   // mevcut state (volatile: iki task aynı anda okur/yazar)
+static char                     sim_cevap[4096]                                  ;   // gelen tüm satırlar (her komut öncesi sıfırlanır)
+static char                     sim_son_komut[128]                               ;   // gönderilen son komut (echo karşılaştırması için)
+static portMUX_TYPE             sim_mux            = portMUX_INITIALIZER_UNLOCKED;   // critical section kilidi (dual-core koruması)
+static volatile uint8_t         sim_binary_modu    = 0                           ;
+
 
 /* ──────────────────── Static Fonksiyonlar ─────────────────────── */
 static void sim800c_reader_task(void *arg);
 static void sim800c_logf(const char *fmt, ...);
 static void sim800c_process_line(const char *line);
 static int  sim800c_cmd_wait(const char *cmd, const char *beklenen, uint32_t timeout_ms);
+static int  sim800c_http_open_adimlari(const char *url, int *total_len);
+static int  sim800c_http_read_adimlari(int offset, uint8_t *out_buf, int size, int *out_len);
 
 
 /* ──────────────────── Dahili Log Yardimcisi ─────────────────── */
@@ -167,10 +171,17 @@ static void sim800c_reader_task(void *arg)
     char     line_buf[256]     ;
     uint16_t line_pos      = 0 ;
     uint8_t  over_flow     = 0 ;
+    int      ret               ;
 
     while(true)
     {
-        int ret = sim_arayuz->read(&byte, 1, 100);
+        if ( 0 != sim_binary_modu )
+        {
+            vTaskDelay(pdMS_TO_TICKS(10));
+            continue;
+        }
+
+        ret = sim_arayuz->read(&byte, 1, 100);
 
         if(SIM800C_VERI_VAR == ret)
         {
@@ -446,3 +457,196 @@ int sim800c_http_get_json(const char *url, char *out_buf, int out_max)
 }
 
 
+static int sim800c_http_open_adimlari(const char *url, int *total_len)
+{
+    char        url_komutu[256]      ;
+    const char *urc_bas              ;
+    int         mode                 ;
+    int         kod                  ;
+    int         uzunluk              ;
+
+    if ( sim800c_cmd_wait(AT_HTTP_INIT, "OK", BEKLE_3_SN) != 0 )
+    {
+        sim800c_logf("HTTP Baslatilamadi!!!");
+        return -1;
+    }
+    sim800c_logf("HTTP Baslatildi");
+
+    if ( sim800c_cmd_wait(AT_HTTP_BEARER, "OK", BEKLE_3_SN) != 0 )
+    {
+        sim800c_logf("HTTP Bearer Ayarlanamadi!!!");
+        return -1;
+    }
+    sim800c_logf("HTTP Bearer Ayarlandi");
+
+    snprintf(url_komutu, sizeof(url_komutu), AT_HTTP_URL, url);
+    if ( sim800c_cmd_wait(url_komutu, "OK", BEKLE_3_SN) != 0 )
+    {
+        sim800c_logf("URL Ayarlanamadi!!!");
+        return -1;
+    }
+    sim800c_logf("URL Ayarlandi: %s", url);
+
+    if ( sim800c_cmd_wait(AT_HTTP_GET, "+HTTPACTION:", BEKLE_30_SN) != 0 )
+    {
+        sim800c_logf("HTTP GET Basarisiz!!!");
+        return -1;
+    }
+
+    urc_bas = strstr(sim800c_get_response(), "+HTTPACTION:");
+    if ( NULL == urc_bas )
+    {
+        sim800c_logf("HTTPACTION URC Bulunamadi!!!");
+        return -1;
+    }
+
+    if ( 3 != sscanf(urc_bas, "+HTTPACTION: %d,%d,%d", &mode, &kod, &uzunluk) )
+    {
+        sim800c_logf("HTTPACTION Parse Hatasi!!!");
+        return -1;
+    }
+
+    if ( 200 != kod )
+    {
+        sim800c_logf("HTTP Durum Kodu Hatali: %d", kod);
+        return -1;
+    }
+
+    *total_len = uzunluk;
+    sim800c_logf("HTTP Oturumu Acildi, Icerik Boyutu: %d byte", uzunluk);
+
+    return 0;
+}
+
+
+int sim800c_http_open(const char *url, int *total_len)
+{
+    int geri_donus_degeri;
+
+    geri_donus_degeri = sim800c_http_open_adimlari(url, total_len);
+
+    if ( 0 != geri_donus_degeri )
+    {
+        sim800c_cmd_wait(AT_HTTP_TERM, "OK", BEKLE_3_SN);
+    }
+
+    return geri_donus_degeri;
+}
+
+
+static int sim800c_http_read_adimlari(int offset, uint8_t *out_buf, int size, int *out_len)
+{
+    char      komut[64]         ;
+    uint8_t   byte              ;
+    char      header_buf[64]    ;
+    int       header_pos    = 0 ;
+    int       beklenen_len  = 0 ;
+    int       okunan        = 0 ;
+    int       kalan             ;
+    int       ret               ;
+    uint8_t  *p                 ;
+
+    /* Komut: "AT+HTTPREAD=<offset>,<size>\r\n" — reader_task bypass, manuel gonderim */
+    snprintf(komut, sizeof(komut), "%s=%d,%d\r\n", AT_HTTP_READ, offset, size);
+    sim_arayuz->send( (const uint8_t *)komut, strlen(komut) );
+
+    /* "+HTTPREAD: N\r\n" basligini ara (echo satirini ve bos satirlari atla) */
+    while ( true )
+    {
+        ret = sim_arayuz->read(&byte, 1, 5000);
+        if ( SIM800C_VERI_VAR != ret )
+        {
+            sim800c_logf("HTTPREAD Header Timeout!!!");
+            return -1;
+        }
+
+        if ( '\n' == byte )
+        {
+            header_buf[header_pos] = '\0';
+
+            if ( NULL != strstr(header_buf, "+HTTPREAD:") )
+            {
+                sscanf(strstr(header_buf, "+HTTPREAD:"), "+HTTPREAD: %d", &beklenen_len);
+                break;
+            }
+            header_pos = 0;
+        }
+        else if ( '\r' != byte )
+        {
+            if ( header_pos < (int)sizeof(header_buf) - 1 )
+            {
+                header_buf[header_pos] = (char)byte;
+                header_pos++;
+            }
+        }
+    }
+
+    if ( beklenen_len <= 0 )
+    {
+        sim800c_logf("HTTPREAD Uzunluk Hatali: %d", beklenen_len);
+        return -1;
+    }
+
+    if ( beklenen_len > size )
+    {
+        sim800c_logf("Beklenenden Fazla Binary: %d > %d", beklenen_len, size);
+        return -1;
+    }
+
+    /* Binary'i toplu halde out_buf'a kopyala */
+    p     = out_buf;
+    kalan = beklenen_len;
+
+    while ( kalan > 0 )
+    {
+        ret = sim_arayuz->read(p, kalan, 5000);
+        if ( ret <= 0 )
+        {
+            sim800c_logf("Binary Okuma Timeout: okunan=%d beklenen=%d", okunan, beklenen_len);
+            return -1;
+        }
+        p      += ret;
+        okunan += ret;
+        kalan  -= ret;
+    }
+
+    *out_len = okunan;
+    sim800c_logf("HTTP Chunk Okundu: offset=%d, %d byte", offset, okunan);
+
+    return 0;
+}
+
+
+int sim800c_http_read(int offset, uint8_t *out_buf, int size, int *out_len)
+{
+    int geri_donus_degeri;
+
+    /* Binary moduna gec; reader_task'in yield'a girmesi icin 150ms bekle
+     * (read timeout'u 100ms, bir sonraki iterasyonda flag'i gorur) */
+    sim_binary_modu = 1;
+    vTaskDelay(pdMS_TO_TICKS(150));
+
+    geri_donus_degeri = sim800c_http_read_adimlari(offset, out_buf, size, out_len);
+
+    sim_binary_modu = 0;
+
+    return geri_donus_degeri;
+}
+
+
+int sim800c_http_close(void)
+{
+    int geri_donus_degeri = -1;
+
+    if ( sim800c_cmd_wait(AT_HTTP_TERM, "OK", BEKLE_3_SN) == 0 )
+    {
+        sim800c_logf("HTTP Oturumu Kapatildi");
+        geri_donus_degeri = 0;
+    }
+    else
+    {
+        sim800c_logf("HTTP Oturumu Kapatilamadi!!!");
+    }
+
+    return geri_donus_degeri;
+}
