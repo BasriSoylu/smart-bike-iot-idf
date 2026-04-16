@@ -4,3 +4,7 @@ build/
 sdkconfig.old
 dependencies.lock
 managed_components/
+
+# draw.io otomatik backup
+*.bkp
+.$*.drawio.bkp

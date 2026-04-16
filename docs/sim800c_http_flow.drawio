@@ -1,0 +1,259 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/26.0.9 Chrome/128.0.6613.186 Electron/32.2.5 Safari/537.36" version="26.0.9">
+  <diagram id="sim800c_http_flow" name="SIM800C HTTP Akışı">
+    <mxGraphModel dx="2049" dy="1206" grid="0" gridSize="5" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="phase1_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;dashed=1;dashPattern=8 4;strokeWidth=2;pointerEvents=0;" parent="1" vertex="1">
+          <mxGeometry x="70" y="154" width="1035" height="306" as="geometry" />
+        </mxCell>
+        <mxCell id="phase2_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;dashed=1;dashPattern=8 4;strokeWidth=2;pointerEvents=0;arcSize=9;" parent="1" vertex="1">
+          <mxGeometry x="70" y="520" width="1035" height="390" as="geometry" />
+        </mxCell>
+        <mxCell id="phase3_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;dashed=1;dashPattern=8 4;strokeWidth=2;pointerEvents=0;" parent="1" vertex="1">
+          <mxGeometry x="70" y="945" width="1035" height="145" as="geometry" />
+        </mxCell>
+        <mxCell id="title" value="&lt;b&gt;SIM800C HTTP GET Akışı&lt;/b&gt; — AT komutları ve API eşleşmesi" style="text;html=1;align=left;fontColor=#111;fontSize=18;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="70" y="27" width="520" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="col_ota" value="&lt;b&gt;OTA Katmanı&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=14;fontColor=#3a2800;arcSize=8;" parent="1" vertex="1">
+          <mxGeometry x="70" y="71" width="220" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="col_sim" value="&lt;b&gt;sim800c Component&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=14;fontColor=#1a3a1a;arcSize=8;" parent="1" vertex="1">
+          <mxGeometry x="400" y="69" width="240" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="col_modem" value="&lt;b&gt;SIM800C + Sunucu&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=14;fontColor=#0a2540;arcSize=8;" parent="1" vertex="1">
+          <mxGeometry x="760" y="68" width="260" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="lifeline_ota" value="" style="endArrow=none;html=1;strokeColor=#d6b656;strokeWidth=2;dashed=1;dashPattern=4 4;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" parent="1" edge="1" source="col_ota">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="180" y="100" as="sourcePoint" />
+            <mxPoint x="180" y="1091" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="lifeline_sim" value="" style="endArrow=none;html=1;strokeColor=#82b366;strokeWidth=2;dashed=1;dashPattern=4 4;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" parent="1" edge="1" source="col_sim">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="520" y="100" as="sourcePoint" />
+            <mxPoint x="520" y="1090" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="lifeline_modem" value="" style="endArrow=none;html=1;strokeColor=#6c8ebf;strokeWidth=2;dashed=1;dashPattern=4 4;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" parent="1" edge="1" source="col_modem">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="890" y="100" as="sourcePoint" />
+            <mxPoint x="892" y="1089" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="phase1_title" value="FAZ 1 — sim800c_http_open(url, &amp;total_len)" style="text;html=1;align=left;fontColor=#b85450;fontSize=15;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="68" y="124" width="325" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="e1_call" value="" style="endArrow=classic;html=1;strokeColor=#d6b656;strokeWidth=2.5;" parent="1" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="180" y="180" as="sourcePoint" />
+            <mxPoint x="518" y="180" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e1_lbl" value="&lt;b&gt;http_open(url, &amp;amp;total_len)&lt;/b&gt;" style="text;html=1;align=center;fontColor=#b8860b;fontSize=13;" parent="1" vertex="1">
+          <mxGeometry x="200" y="157" width="300" height="18" as="geometry" />
+        </mxCell>
+        <mxCell id="at1_call" value="" style="endArrow=classic;html=1;strokeColor=#82b366;strokeWidth=2.5;" parent="1" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="520" y="215" as="sourcePoint" />
+            <mxPoint x="888" y="215" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="at1_lbl" value="&lt;b&gt;AT+HTTPINIT&lt;/b&gt;" style="text;html=1;align=center;fontColor=#3d7a2e;fontSize=13;" parent="1" vertex="1">
+          <mxGeometry x="560" y="190" width="290" height="18" as="geometry" />
+        </mxCell>
+        <mxCell id="at1_resp" value="" style="endArrow=classic;html=1;strokeColor=#6c8ebf;strokeWidth=2.5;dashed=1;" parent="1" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="888" y="240" as="sourcePoint" />
+            <mxPoint x="522" y="240" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="at1_rlbl" value="&lt;b&gt;OK&lt;/b&gt;" style="text;html=1;align=center;fontColor=#1a5276;fontSize=13;" parent="1" vertex="1">
+          <mxGeometry x="555" y="215" width="290" height="18" as="geometry" />
+        </mxCell>
+        <mxCell id="at2_call" value="" style="endArrow=classic;html=1;strokeColor=#82b366;strokeWidth=2.5;" parent="1" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="520" y="275" as="sourcePoint" />
+            <mxPoint x="888" y="275" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="at2_lbl" value="&lt;b&gt;AT+HTTPPARA=&amp;quot;URL&amp;quot;,&amp;quot;http://.../firmware.bin&amp;quot;&lt;/b&gt;" style="text;html=1;align=center;fontColor=#3d7a2e;fontSize=13;" parent="1" vertex="1">
+          <mxGeometry x="530" y="253" width="350" height="18" as="geometry" />
+        </mxCell>
+        <mxCell id="at2_resp" value="" style="endArrow=classic;html=1;strokeColor=#6c8ebf;strokeWidth=2.5;dashed=1;" parent="1" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="888" y="300" as="sourcePoint" />
+            <mxPoint x="522" y="300" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="at2_rlbl" value="&lt;b&gt;OK&lt;/b&gt;" style="text;html=1;align=center;fontColor=#1a5276;fontSize=13;" parent="1" vertex="1">
+          <mxGeometry x="555" y="278" width="290" height="18" as="geometry" />
+        </mxCell>
+        <mxCell id="at3_call" value="" style="endArrow=classic;html=1;strokeColor=#82b366;strokeWidth=2.5;" parent="1" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="520" y="335" as="sourcePoint" />
+            <mxPoint x="888" y="335" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="at3_lbl" value="&lt;b&gt;AT+HTTPACTION=0&lt;/b&gt;   &lt;font color=&#39;#555&#39;&gt;(GET)&lt;/font&gt;" style="text;html=1;align=center;fontColor=#3d7a2e;fontSize=13;" parent="1" vertex="1">
+          <mxGeometry x="560" y="312" width="290" height="18" as="geometry" />
+        </mxCell>
+        <mxCell id="at3_resp" value="" style="endArrow=classic;html=1;strokeColor=#6c8ebf;strokeWidth=2.5;dashed=1;" parent="1" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="888" y="360" as="sourcePoint" />
+            <mxPoint x="522" y="360" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="at3_rlbl" value="&lt;b&gt;OK&lt;/b&gt;" style="text;html=1;align=center;fontColor=#1a5276;fontSize=13;" parent="1" vertex="1">
+          <mxGeometry x="560" y="339" width="290" height="18" as="geometry" />
+        </mxCell>
+        <mxCell id="urc_resp" value="" style="endArrow=classic;html=1;strokeColor=#b85450;strokeWidth=3;" parent="1" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="888" y="400" as="sourcePoint" />
+            <mxPoint x="522" y="400" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="urc_lbl" value="&lt;b&gt;+HTTPACTION: 0,200,152496&lt;/b&gt;   &lt;font color=&#39;#555&#39;&gt;← URC&lt;/font&gt;" style="text;html=1;align=center;fontColor=#b85450;fontSize=13;" parent="1" vertex="1">
+          <mxGeometry x="530" y="376" width="350" height="18" as="geometry" />
+        </mxCell>
+        <mxCell id="e1_ret" value="" style="endArrow=classic;html=1;strokeColor=#d6b656;strokeWidth=2.5;dashed=1;" parent="1" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="518" y="435" as="sourcePoint" />
+            <mxPoint x="180" y="435" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e1_rlbl" value="&lt;b&gt;return 0&lt;/b&gt;   &lt;font color=&#39;#555&#39;&gt;(total_len = 152496)&lt;/font&gt;" style="text;html=1;align=center;fontColor=#b8860b;fontSize=13;" parent="1" vertex="1">
+          <mxGeometry x="195" y="411" width="320" height="18" as="geometry" />
+        </mxCell>
+        <mxCell id="phase1_side" value="&lt;b&gt;Kritik:&lt;/b&gt; +HTTPACTION URC&#39;si&lt;br&gt;HTTPACTION=0 komutuna OK&lt;br&gt;dönüşünden &lt;b&gt;sonra&lt;/b&gt; gelir.&lt;br&gt;cmd_wait 2 kez çağrılır:&lt;br&gt;&lt;br&gt;1) &amp;quot;OK&amp;quot;&lt;br&gt;2) &amp;quot;+HTTPACTION:&amp;quot;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;fontColor=#333;arcSize=8;align=left;verticalAlign=top;spacingLeft=8;spacingTop=6;" parent="1" vertex="1">
+          <mxGeometry x="915" y="212" width="170" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="phase2_title" value="FAZ 2 — sim800c_http_read(offset, buf, size, &amp;out_len)   &lt;font color=&#39;#888&#39; size=&#39;2&#39;&gt;[döngüde çağrılır]&lt;/font&gt;" style="text;html=1;align=left;fontColor=#9673a6;fontSize=15;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="70" y="488" width="530" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="e2_call" value="" style="endArrow=classic;html=1;strokeColor=#d6b656;strokeWidth=2.5;" parent="1" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="180" y="545" as="sourcePoint" />
+            <mxPoint x="518" y="545" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e2_lbl" value="&lt;b&gt;http_read(offset=0, buf, 1024, &amp;amp;out_len)&lt;/b&gt;" style="text;html=1;align=center;fontColor=#b8860b;fontSize=13;" parent="1" vertex="1">
+          <mxGeometry x="187" y="522" width="330" height="18" as="geometry" />
+        </mxCell>
+        <mxCell id="at4_call" value="" style="endArrow=classic;html=1;strokeColor=#82b366;strokeWidth=2.5;" parent="1" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="520" y="585" as="sourcePoint" />
+            <mxPoint x="888" y="585" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="at4_lbl" value="&lt;b&gt;AT+HTTPREAD=0,1024&lt;/b&gt;" style="text;html=1;align=center;fontColor=#3d7a2e;fontSize=13;" parent="1" vertex="1">
+          <mxGeometry x="560" y="563" width="290" height="18" as="geometry" />
+        </mxCell>
+        <mxCell id="at4_hdr" value="" style="endArrow=classic;html=1;strokeColor=#6c8ebf;strokeWidth=2.5;dashed=1;" parent="1" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="888" y="620" as="sourcePoint" />
+            <mxPoint x="522" y="620" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="at4_hlbl" value="&lt;b&gt;+HTTPREAD: 1024&lt;/b&gt;   &lt;font color=&#39;#555&#39;&gt;(başlık)&lt;/font&gt;" style="text;html=1;align=center;fontColor=#1a5276;fontSize=13;" parent="1" vertex="1">
+          <mxGeometry x="560" y="597" width="290" height="18" as="geometry" />
+        </mxCell>
+        <mxCell id="at4_bin" value="" style="endArrow=classic;html=1;strokeColor=#b85450;strokeWidth=4;" parent="1" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="888" y="665" as="sourcePoint" />
+            <mxPoint x="522" y="665" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="at4_blbl" value="&lt;b&gt;1024 byte HAM BINARY&lt;/b&gt;   &lt;font color=&#39;#555&#39;&gt;(\r \n \0 içerebilir)&lt;/font&gt;" style="text;html=1;align=center;fontColor=#b85450;fontSize=13;" parent="1" vertex="1">
+          <mxGeometry x="500" y="642" width="430" height="18" as="geometry" />
+        </mxCell>
+        <mxCell id="at4_tail" value="" style="endArrow=classic;html=1;strokeColor=#6c8ebf;strokeWidth=2.5;dashed=1;" parent="1" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="888" y="705" as="sourcePoint" />
+            <mxPoint x="522" y="705" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="at4_tlbl" value="&lt;b&gt;OK&lt;/b&gt;" style="text;html=1;align=center;fontColor=#1a5276;fontSize=13;" parent="1" vertex="1">
+          <mxGeometry x="560" y="682" width="290" height="18" as="geometry" />
+        </mxCell>
+        <mxCell id="bypass_note" value="&lt;b&gt;reader_task geçici kapatılır:&lt;/b&gt;&lt;br&gt;başlığı gördükten sonra&lt;br&gt;UART&#39;tan &lt;b&gt;out_buf&lt;/b&gt;&#39;a doğrudan&lt;br&gt;ham byte okunur.&lt;br&gt;Line buffer kullanılmaz." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;fontColor=#333;arcSize=8;align=left;spacingLeft=8;spacingTop=6;verticalAlign=top;" parent="1" vertex="1">
+          <mxGeometry x="910" y="660" width="170" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="e2_ret" value="" style="endArrow=classic;html=1;strokeColor=#d6b656;strokeWidth=2.5;dashed=1;" parent="1" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="518" y="755" as="sourcePoint" />
+            <mxPoint x="180" y="755" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e2_rlbl" value="&lt;b&gt;return 0&lt;/b&gt;   &lt;font color=&#39;#555&#39;&gt;(*out_len = 1024 → flash&#39;a yaz, offset += 1024)&lt;/font&gt;" style="text;html=1;align=center;fontColor=#b8860b;fontSize=13;" parent="1" vertex="1">
+          <mxGeometry x="100" y="725" width="510" height="18" as="geometry" />
+        </mxCell>
+        <mxCell id="dots" value="&lt;b&gt;...   149 kez daha   (offset=1024, 2048, 3072, ...)   ...&lt;/b&gt;" style="text;html=1;align=center;fontColor=#888;fontSize=13;" parent="1" vertex="1">
+          <mxGeometry x="195" y="790" width="305" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="last_call" value="" style="endArrow=classic;html=1;strokeColor=#d6b656;strokeWidth=2.5;" parent="1" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="180" y="855" as="sourcePoint" />
+            <mxPoint x="518" y="855" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="last_lbl" value="&lt;b&gt;http_read(offset=151552, ...)&lt;/b&gt;" style="text;html=1;align=center;fontColor=#b8860b;fontSize=13;" parent="1" vertex="1">
+          <mxGeometry x="190" y="832" width="330" height="18" as="geometry" />
+        </mxCell>
+        <mxCell id="last_ret" value="" style="endArrow=classic;html=1;strokeColor=#d6b656;strokeWidth=2.5;dashed=1;" parent="1" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="518" y="890" as="sourcePoint" />
+            <mxPoint x="180" y="890" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="last_rlbl" value="&lt;b&gt;return 0&lt;/b&gt;   &lt;font color=&#39;#555&#39;&gt;(*out_len = 944 ← son chunk)&lt;/font&gt;" style="text;html=1;align=center;fontColor=#b8860b;fontSize=13;" parent="1" vertex="1">
+          <mxGeometry x="160" y="865" width="400" height="18" as="geometry" />
+        </mxCell>
+        <mxCell id="phase3_title" value="FAZ 3 — sim800c_http_close()" style="text;html=1;align=left;fontColor=#3d7a2e;fontSize=15;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="70" y="915" width="233" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="e3_call" value="" style="endArrow=classic;html=1;strokeColor=#d6b656;strokeWidth=2.5;" parent="1" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="180" y="985" as="sourcePoint" />
+            <mxPoint x="518" y="985" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e3_lbl" value="&lt;b&gt;http_close()&lt;/b&gt;" style="text;html=1;align=center;fontColor=#b8860b;fontSize=13;" parent="1" vertex="1">
+          <mxGeometry x="200" y="960" width="300" height="18" as="geometry" />
+        </mxCell>
+        <mxCell id="at5_call" value="" style="endArrow=classic;html=1;strokeColor=#82b366;strokeWidth=2.5;" parent="1" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="520" y="1025" as="sourcePoint" />
+            <mxPoint x="888" y="1025" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="at5_lbl" value="&lt;b&gt;AT+HTTPTERM&lt;/b&gt;" style="text;html=1;align=center;fontColor=#3d7a2e;fontSize=13;" parent="1" vertex="1">
+          <mxGeometry x="560" y="1001" width="290" height="18" as="geometry" />
+        </mxCell>
+        <mxCell id="at5_resp" value="" style="endArrow=classic;html=1;strokeColor=#6c8ebf;strokeWidth=2.5;dashed=1;" parent="1" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="888" y="1060" as="sourcePoint" />
+            <mxPoint x="522" y="1060" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="at5_rlbl" value="&lt;b&gt;OK&lt;/b&gt;" style="text;html=1;align=center;fontColor=#1a5276;fontSize=13;" parent="1" vertex="1">
+          <mxGeometry x="560" y="1037" width="290" height="18" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8f8f8;strokeColor=#bbb;" parent="1" vertex="1">
+          <mxGeometry x="70" y="1115" width="1035" height="94" as="geometry" />
+        </mxCell>
+        <mxCell id="lg_title" value="&lt;b&gt;Açıklamalar&lt;/b&gt;" style="text;html=1;align=left;fontColor=#111;fontSize=14;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="90" y="1122" width="200" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="lg1" value="&lt;b&gt;Düz ok:&lt;/b&gt; istek yönü  • &lt;b&gt;Kesikli ok:&lt;/b&gt; cevap yönü  • &lt;font color=&quot;#b85450&quot;&gt;&lt;b&gt;Kalın kırmızı:&lt;/b&gt; URC veya ham binary (özel işlem)&lt;/font&gt;" style="text;html=1;align=left;fontColor=#222;fontSize=13;" parent="1" vertex="1">
+          <mxGeometry x="90" y="1148" width="560" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="lg2" value="&lt;b&gt;Yeni API:&lt;/b&gt;  &lt;font color=&#39;#b85450&#39;&gt;http_open&lt;/font&gt; → FAZ 1  •  &lt;font color=&#39;#9673a6&#39;&gt;http_read&lt;/font&gt; → FAZ 2 (loop)  •  &lt;font color=&#39;#3d7a2e&#39;&gt;http_close&lt;/font&gt; → FAZ 3" style="text;html=1;align=left;fontColor=#222;fontSize=13;" parent="1" vertex="1">
+          <mxGeometry x="90" y="1174" width="560" height="22" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

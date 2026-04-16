@@ -1,0 +1,97 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/26.0.9 Chrome/128.0.6613.186 Electron/32.2.5 Safari/537.36" version="26.0.9">
+  <diagram name="Smart Bike IoT - Mimari" id="smart-bike-arch-v2">
+    <mxGraphModel dx="1687" dy="993" grid="1" gridSize="5" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1500" pageHeight="950" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="Smart Bike IoT - Yazilim Mimarisi (Dependency Injection)" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontSize=17;fontStyle=1;fontColor=#1a1a2e;" parent="1" vertex="1">
+          <mxGeometry x="30" y="10" width="1440" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="b1" value="UYGULAMA" style="text;html=1;strokeColor=none;fillColor=#0050ef;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fontColor=#ffffff;rotation=-90;rounded=1;" parent="1" vertex="1">
+          <mxGeometry x="485" y="120" width="90" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="b2" value="GSM SERVIS" style="text;html=1;strokeColor=none;fillColor=#00897b;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fontColor=#ffffff;rotation=-90;rounded=1;" parent="1" vertex="1">
+          <mxGeometry x="485" y="340" width="90" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="b3" value="MODEM SURUCU" style="text;html=1;strokeColor=none;fillColor=#8e24aa;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fontColor=#ffffff;rotation=-90;rounded=1;" parent="1" vertex="1">
+          <mxGeometry x="485" y="560" width="90" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="b4" value="DONANIM" style="text;html=1;strokeColor=none;fillColor=#b71c1c;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fontColor=#ffffff;rotation=-90;rounded=1;" parent="1" vertex="1">
+          <mxGeometry x="485" y="770" width="90" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="rules" value="&lt;b&gt;&lt;font color=&quot;#ffffff&quot;&gt;Bagimlilik Kurali&lt;/font&gt;&lt;/b&gt;&lt;br&gt;&lt;br&gt;&lt;font color=&quot;#69f0ae&quot;&gt;v&lt;/font&gt;&lt;font color=&quot;#ffffff&quot;&gt; gsm.c icinde hic AT komutu yok&lt;/font&gt;&lt;br&gt;&lt;font color=&quot;#69f0ae&quot;&gt;v&lt;/font&gt;&lt;font color=&quot;#ffffff&quot;&gt; sim800c.c icinde UART / pin yok&lt;/font&gt;&lt;br&gt;&lt;br&gt;&lt;font color=&quot;#ffab40&quot;&gt;SIM7600e gecince:&lt;/font&gt;&lt;br&gt;&lt;font color=&quot;#ffffff&quot;&gt;  sim7600.c ekle&lt;/font&gt;&lt;br&gt;&lt;font color=&quot;#ffffff&quot;&gt;  main.cde inject et&lt;/font&gt;&lt;br&gt;&lt;font color=&quot;#ff6060&quot;&gt;  gsm.c  degismez&lt;/font&gt;&lt;br&gt;&lt;font color=&quot;#ff6060&quot;&gt;  ota.c  degismez&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a1a2e;strokeColor=#444466;strokeWidth=2;align=left;spacingLeft=10;spacingTop=6;verticalAlign=top;fontSize=11;" parent="1" vertex="1">
+          <mxGeometry x="1150" y="60" width="380" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="gsm_io" value="&lt;b&gt;gsm_io_t&lt;/b&gt; - main.c doldurur, gsm.c kullanir&lt;br&gt;&lt;br&gt;typedef struct {&lt;br&gt;  int (*gprs_connect)   (void);&lt;br&gt;  int (*gprs_disconnect)(void);&lt;br&gt;  int (*http_get_json)  (url, buf, max);&lt;br&gt;  int (*http_get_binary)(url, offset, ...);&lt;br&gt;  int (*mqtt_publish)   (topic, msg, qos);&lt;br&gt;} gsm_io_t;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;strokeWidth=2;align=left;spacingLeft=10;spacingTop=6;verticalAlign=top;fontSize=11;fontFamily=Courier New;" parent="1" vertex="1">
+          <mxGeometry x="1150" y="280" width="380" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="sim_io" value="&lt;b&gt;sim800c_io_t&lt;/b&gt; - main.c doldurur, sim800c kullanir&lt;br&gt;&lt;br&gt;typedef struct {&lt;br&gt;  void (*send)(const uint8_t *data, size_t len);&lt;br&gt;  int  (*read)(uint8_t *buf, size_t len,&lt;br&gt;               uint32_t timeout_ms);&lt;br&gt;  void (*log )(const char *msg);&lt;br&gt;} sim800c_io_t;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;strokeWidth=2;align=left;spacingLeft=10;spacingTop=6;verticalAlign=top;fontSize=11;fontFamily=Courier New;" parent="1" vertex="1">
+          <mxGeometry x="1150" y="500" width="380" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="main" value="&lt;b&gt;main.c - Kablolama Katmani&lt;/b&gt;&lt;br&gt;&lt;br&gt;sim800c_io_t sim_io = { .send=uart_send, .read=uart_read, .log=... };&lt;br&gt;gsm_io_t gsm_io = { .gprs_connect=sim800c_gprs_connect, ... };&lt;br&gt;&lt;br&gt;sim800c_init(&amp;amp;sim_io);&lt;br&gt;gsm_init(&amp;amp;gsm_io);" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#0050ef;strokeWidth=2;align=left;spacingLeft=10;spacingTop=6;verticalAlign=top;fontSize=11;" parent="1" vertex="1">
+          <mxGeometry x="550" y="60" width="480" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="gsm" value="&lt;b&gt;gsm.c - Servis Katmani&lt;/b&gt;&lt;br&gt;&lt;br&gt;gsm_gprs_connect() / gsm_http_get_json()&lt;br&gt;gsm_http_get_binary() / gsm_mqtt_publish()&lt;br&gt;&lt;br&gt;- Baglanti yonetimi, retry, backoff&lt;br&gt;- MQTT mesaj kuyrugu&lt;br&gt;&lt;br&gt;&lt;font color=&quot;#c62828&quot;&gt;x AT komutu bilmez     x Modem tipi bilmez&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#00897b;strokeWidth=2;align=left;spacingLeft=10;spacingTop=6;verticalAlign=top;fontSize=11;" parent="1" vertex="1">
+          <mxGeometry x="550" y="280" width="480" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="sim" value="&lt;b&gt;sim800c.c - Modem Surucu Katmani&lt;/b&gt;&lt;br&gt;&lt;br&gt;sim800c_gprs_connect()    AT+CGATT, AT+SAPBR...&lt;br&gt;sim800c_http_get_json()   AT+HTTPINIT, AT+HTTPPARA...&lt;br&gt;sim800c_http_get_binary() AT+HTTPREAD...&lt;br&gt;sim800c_mqtt_publish()    AT+CIPSTART...&lt;br&gt;&lt;br&gt;&lt;font color=&quot;#c62828&quot;&gt;x UART bilmez     x Pin numarasi bilmez&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#8e24aa;strokeWidth=2;align=left;spacingLeft=10;spacingTop=6;verticalAlign=top;fontSize=11;" parent="1" vertex="1">
+          <mxGeometry x="550" y="500" width="480" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="uart" value="&lt;b&gt;components/uart/&lt;/b&gt;&lt;br&gt;&lt;br&gt;uart_send(data, len)&lt;br&gt;uart_read(buf, len, timeout)&lt;br&gt;&lt;br&gt;GPIO16 RX - GPIO17 TX&lt;br&gt;UART2, 115200 baud" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b71c1c;strokeWidth=2;align=left;spacingLeft=10;spacingTop=6;verticalAlign=top;fontSize=11;" parent="1" vertex="1">
+          <mxGeometry x="550" y="720" width="175" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="hw" value="&lt;b&gt;SIM800C (Fiziksel Modul)&lt;/b&gt;&lt;br&gt;&lt;br&gt;GPRS (2G)&lt;br&gt;SIM Kart&lt;br&gt;boldmotorbikes.duckdns.org" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b71c1c;strokeWidth=2;align=left;spacingLeft=10;spacingTop=6;verticalAlign=top;fontSize=11;" parent="1" vertex="1">
+          <mxGeometry x="860" y="720" width="170" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="OOowjoTDI7XWbetLwxSK-3" value="&#xa;&lt;span style=&quot;color: rgb(0, 105, 92); font-family: Helvetica; font-size: 10px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 700; letter-spacing: normal; orphans: 2; text-align: center; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space: nowrap; text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; float: none; display: inline !important;&quot;&gt;gsm API&lt;/span&gt;&#xa;&#xa;" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#00897b;strokeWidth=2;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=10;fontColor=#00695c;fontStyle=1;labelBackgroundColor=none;endArrow=classic;" edge="1" parent="1" source="ota" target="b2">
+          <mxGeometry x="0.1781" y="5" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ota" value="&lt;b&gt;ota.c&lt;/b&gt;&lt;br&gt;&lt;br&gt;gsm_http_get_json(version_url)&lt;br&gt;Versiyon karsilastir&lt;br&gt;gsm_http_get_binary(firmware_url)&lt;br&gt;esp_ota_write()&lt;br&gt;&lt;br&gt;&lt;font color=&quot;#c62828&quot;&gt;x Modem tipini bilmez&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#0050ef;strokeWidth=2;align=left;spacingLeft=10;spacingTop=6;verticalAlign=top;fontSize=11;" parent="1" vertex="1">
+          <mxGeometry x="55" y="275" width="319" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="a1" value="gsm_init" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#00897b;strokeWidth=2;fontColor=#00695c;fontStyle=1;fontSize=10;align=left;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.25;entryY=0;entryDx=0;entryDy=0;" parent="1" source="main" target="gsm" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="5" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="a2" value="sim800c_init" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#8e24aa;strokeWidth=2;fontColor=#6a1b9a;fontStyle=1;fontSize=10;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="main" edge="1">
+          <mxGeometry x="0.2742" relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="670" y="240" />
+              <mxPoint x="420" y="240" />
+              <mxPoint x="420" y="605" />
+            </Array>
+            <mxPoint x="510" y="165" as="sourcePoint" />
+            <mxPoint x="510" y="604.9999999999998" as="targetPoint" />
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="a3" value="s_io fonksiyon cagrilari" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#8e24aa;strokeWidth=2;fontColor=#6a1b9a;fontStyle=1;fontSize=10;align=left;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="gsm" target="sim" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="5" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="a5" value="UART2 TX/RX" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#b71c1c;strokeWidth=2;fontColor=#b71c1c;fontStyle=1;fontSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="uart" target="hw" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a7" value="inject" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#d6b656;strokeWidth=2;dashed=1;fontColor=#7d5200;fontStyle=1;fontSize=10;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="gsm_io" target="gsm" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a8" value="inject" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#d6b656;strokeWidth=2;dashed=1;fontColor=#7d5200;fontStyle=1;fontSize=10;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="sim_io" target="sim" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="OOowjoTDI7XWbetLwxSK-1" value="s_io send/read" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#b71c1c;strokeWidth=2;fontColor=#b71c1c;fontStyle=1;fontSize=10;align=left;exitX=0.184;exitY=0.992;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;exitPerimeter=0;" edge="1" parent="1" source="sim" target="uart">
+          <mxGeometry x="0.1941" y="5" relative="1" as="geometry">
+            <mxPoint x="-3" y="-5" as="offset" />
+            <Array as="points">
+              <mxPoint x="638" y="685" />
+              <mxPoint x="638" y="685" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
