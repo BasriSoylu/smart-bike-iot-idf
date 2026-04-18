@@ -56,55 +56,79 @@ void sim800c_init(sim800c_io_t *io)
     memset(sim_cevap,     0, sizeof(sim_cevap));
     memset(sim_son_komut, 0, sizeof(sim_son_komut));
 
-    xTaskCreate(sim800c_reader_task, "sim800c_reader", 2048, NULL, 5, NULL);
+    xTaskCreate(sim800c_reader_task, "sim800c_reader", 4096, NULL, 5, NULL);
 }
 
 
 int sim800c_baslat(void)
 {
-    vTaskDelay(pdMS_TO_TICKS(100));    // sim800c_reader_task'in ayaga kalkmasi bekleniyor
+    /* Yaygin SIM800C baud'lari — sirayla denenir. 115200 ilk, cunku hedef baud budur */
+    static const uint32_t baud_listesi[] = { 115200U, 9600U, 19200U, 38400U, 57600U };
+    const    int          baud_sayisi    = sizeof(baud_listesi) / sizeof(baud_listesi[0]);
+    uint32_t              bulunan_baud   = 0U;
+    int                   i;
 
-    if(sim800c_cmd_wait(AT_TEST, "OK", BEKLE_1_SN) == 0)
-    {
-        sim800c_logf("Modul baslatildi, Baud Rate->%d", SIM800C_HEDEF_BAUD_RATE);
-        return 0;
-    }
-    else
-    {
-        sim800c_logf("Modul Baud Rate->%d'de cevap vermedi. Baud Rate'yi %d'e cek:", SIM800C_HEDEF_BAUD_RATE, SIM800C_DEFAULT_BAUD_RATE);
-        sim_arayuz->set_baud(SIM800C_DEFAULT_BAUD_RATE);
+    /* Modulun boot'u tamamlamasi icin bekle (SIM800C typical ~3 sn) */
+    vTaskDelay(pdMS_TO_TICKS(3000));
 
-        if(sim800c_cmd_wait(AT_TEST, "OK", BEKLE_1_SN) == 0)
+    /* --- 1) Baud taramasi: hangi hizda cevap veriyor? ---------------- */
+    for ( i = 0; i < baud_sayisi; i++ )
+    {
+        sim800c_logf("Baud taraniyor: %u", (unsigned)baud_listesi[i]);
+        sim_arayuz->set_baud(baud_listesi[i]);
+        vTaskDelay(pdMS_TO_TICKS(100));
+
+        if ( 0 == sim800c_cmd_wait(AT_TEST, "OK", BEKLE_1_SN) )
         {
-            sim800c_logf("Modul baslatildi, Baud Rate->%d", SIM800C_DEFAULT_BAUD_RATE);
+            bulunan_baud = baud_listesi[i];
+            sim800c_logf(">>> Modul bulundu: Baud=%u", (unsigned)bulunan_baud);
+            break;
+        }
+    }
 
-            if(sim800c_cmd_wait(AT_BAUD_115200_YAP, "OK", BEKLE_2_SN) == 0)
-            {
-                sim_arayuz->set_baud(SIM800C_HEDEF_BAUD_RATE);
+    if ( 0U == bulunan_baud )
+    {
+        sim800c_logf("HATA: Modul hicbir baud'da cevap vermedi! Donanim/guc/kablolama kontrolu gerek.");
+        return -1;
+    }
 
-                if(sim800c_cmd_wait(AT_TEST, "OK", BEKLE_1_SN) == 0)
-                {
-                    sim800c_logf("Modul Baud Rate Degistirildi, Baud Rate->%d", SIM800C_HEDEF_BAUD_RATE);
-                    return 0;
-                }
-                else
-                {
-                    sim800c_logf("Modul ile %d Baud Rate uzerinden iletisime gecilemedi!!!", SIM800C_HEDEF_BAUD_RATE);
-                    return -1;
-                }
-            }
-            else
-            {
-                sim800c_logf("Modul Baud Rate Degistirelemedi!!!, Baud Rate->%d", SIM800C_DEFAULT_BAUD_RATE);
-                return -1;
-            }
+    /* --- 2) Modulu kalici olarak autobaud'a al ----------------------- *
+     * AT+IPR=0 + AT&W → gelecekte hangi baud'da acilirsak acilalim
+     * ilk AT ile sync olur, bu sorun bir daha yasanmaz.                */
+    if ( 0 == sim800c_cmd_wait(AT_AUTOBAUD, "OK", BEKLE_2_SN) )
+    {
+        sim800c_logf("Autobaud modu acildi (AT+IPR=0)");
+
+        if ( 0 == sim800c_cmd_wait(AT_SAVE_CONFIG, "OK", BEKLE_2_SN) )
+        {
+            sim800c_logf("Modul autobaud'a kalici kaydedildi (AT&W)");
         }
         else
         {
-            sim800c_logf("Module Erisim Saglanamadi!!!");
-            return -1;
+            sim800c_logf("UYARI: AT&W basarisiz — autobaud ayari gecici (reset sonrasi kaybolur)");
         }
     }
+    else
+    {
+        sim800c_logf("UYARI: AT+IPR=0 basarisiz — autobaud'a alinamadi");
+    }
+
+    /* --- 3) Hedef baud'a (115200) gec -------------------------------- */
+    if ( SIM800C_HEDEF_BAUD_RATE != bulunan_baud )
+    {
+        sim_arayuz->set_baud(SIM800C_HEDEF_BAUD_RATE);
+        vTaskDelay(pdMS_TO_TICKS(100));
+
+        if ( 0 != sim800c_cmd_wait(AT_TEST, "OK", BEKLE_1_SN) )
+        {
+            sim800c_logf("HATA: %u -> %u baud gecisi basarisiz!", (unsigned)bulunan_baud, SIM800C_HEDEF_BAUD_RATE);
+            return -1;
+        }
+        sim800c_logf("Baud gecisi: %u -> %u OK", (unsigned)bulunan_baud, SIM800C_HEDEF_BAUD_RATE);
+    }
+
+    sim800c_logf("Modul hazir: Baud=%u", SIM800C_HEDEF_BAUD_RATE);
+    return 0;
 }
 
 
@@ -113,12 +137,16 @@ void sim800c_send_command(const char *cmd)
     char    buf[160];
     uint8_t idle_mi ;
 
+    /* snprintf critical section DISINDA yapilir — 115200 baud'da UART ISR
+     * sikligi critical + snprintf kombinasyonuyla panik uretebiliyor (gercek hata). */
+    snprintf(sim_son_komut, sizeof(sim_son_komut), "%s", cmd);  // Echo kontrolu icin sakla
+    snprintf(buf, sizeof(buf), "%s\r\n", cmd);
+
+    /* Kilit sadece sim_durum atomik check-and-update icin */
     portENTER_CRITICAL(&sim_mux);
     idle_mi = (uint8_t)(SIM800C_IDLE == sim_durum);
     if(idle_mi)
     {
-        snprintf(sim_son_komut, sizeof(sim_son_komut), "%s", cmd);  // Echo kontrolu icin sakla
-        snprintf(buf, sizeof(buf), "%s\r\n", cmd);
         sim_durum = SIM800C_ECHO_BEKLE;
     }
     portEXIT_CRITICAL(&sim_mux);
@@ -154,11 +182,11 @@ static void sim800c_process_line(const char *line)
         }
         else if(SIM800C_CEVAP_BEKLE == sim_durum)
         {
-            portENTER_CRITICAL(&sim_mux);
+            /* sim_cevap'a sadece reader_task yazar (tek yazar), critical gereksiz.
+             * snprintf critical icinde olmamali — panik sebebi. */
             dolu_uzunluk = strlen(sim_cevap);
             bos_alan     = sizeof(sim_cevap) - dolu_uzunluk - 1;
             snprintf(sim_cevap + dolu_uzunluk, bos_alan, "%s\n", line);
-            portEXIT_CRITICAL(&sim_mux);
             sim800c_logf("Satir alindi: %s", line);
         }
     }
@@ -625,6 +653,13 @@ int sim800c_http_read(int offset, uint8_t *out_buf, int size, int *out_len)
      * (read timeout'u 100ms, bir sonraki iterasyonda flag'i gorur) */
     sim_binary_modu = 1;
     vTaskDelay(pdMS_TO_TICKS(150));
+
+    /* reader_task uyurken UART HW buffer'a dusmus stale byte'lari temizle.
+     * Aksi halde +HTTPREAD: header parser onceki URC'lerin artigina takilabilir. */
+    if ( NULL != sim_arayuz->flush )
+    {
+        sim_arayuz->flush();
+    }
 
     geri_donus_degeri = sim800c_http_read_adimlari(offset, out_buf, size, out_len);
 

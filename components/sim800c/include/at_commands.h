@@ -6,6 +6,8 @@
 #define AT_ECHO_ON              "ATE1"                               // Echo aç  → gönderilen komutu geri yazar
 #define AT_ECHO_OFF             "ATE0"                               // Echo kapat
 #define AT_BAUD_115200_YAP      "AT+IPR=115200"                      // Modul Baud Rate ayarini 115200 yap
+#define AT_AUTOBAUD             "AT+IPR=0"                           // Autobaud modu (her baud'u algilar)
+#define AT_SAVE_CONFIG          "AT&W"                               // Aktif ayarlari NVM'e kalici yaz
 
 /*=========== SIM / SEBEKE KOMUTLARI ==========*/
 #define AT_SIM_STATUS           "AT+CPIN?"                           // SIM PIN durumu → READY / SIM PIN / SIM PUK
