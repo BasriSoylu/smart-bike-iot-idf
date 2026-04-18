@@ -4,13 +4,34 @@
  * AKTIF VERSIYON
  *================================================================*/
 #define YAZILIM_VERSIYON_MAJOR  1
-#define YAZILIM_VERSIYON_MINOR  4
+#define YAZILIM_VERSIYON_MINOR  5
 #define YAZILIM_VERSIYON_PATCH  0
-#define YAZILIM_VERSIYON        "v1.4.0"
+#define YAZILIM_VERSIYON        "1.5.0"
 
 /*================================================================
  * VERSIYON GECMISI - en yeni ustte
  *================================================================*/
+
+/*******************************************************************
+ * Versiyon       : v1.5.0
+ * Branch         : main
+ * Kullanilan SDK : ESP-IDF v5.5
+ * Kullanilan IDE : Visual Studio Code
+ *=================================================================
+* Yazar           : Hasan Basri SOYLU
+* Tarih           : 19.04.2026
+*==================================================================
+* Aciklama        : OTA component eklendi. ota_kontrol +
+*                   ota_guncelle API'si Tasarim 2 (struct + iki
+*                   asamali) ile implement edildi. cJSON ile
+*                   version.json parse, mbedtls MD5 ile chunk bazli
+*                   hash dogrulama, esp_ota_* API ile dual-bank
+*                   flash yazma. sim800c HTTPINIT oncesi defansif
+*                   HTTPTERM eklendi, BEKLE_120_SN (binary download
+*                   icin) tanimlandi. FIRMWARE_VERSION makrosu
+*                   YAZILIM_VERSIYON olarak yeniden adlandirildi.
+*                   Main task stack 3584 -> 8192.
+*******************************************************************/
 
 /*******************************************************************
  * Versiyon       : v1.4.0

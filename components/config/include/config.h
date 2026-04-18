@@ -7,9 +7,7 @@
 #define BEKLE_3_SN   (3000U)
 #define BEKLE_5_SN   (5000U)
 #define BEKLE_30_SN  (30000U)
-
-// Firmware versiyonu
-#define FIRMWARE_VERSION  "1.0.0"
+#define BEKLE_120_SN (120000U)
 
 // OTA sunucu
 #define OTA_SERVER_HOST   "boldmotorbikes.duckdns.org"

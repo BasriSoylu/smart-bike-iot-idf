@@ -5,59 +5,32 @@
 #include "config.h"
 #include "uart.h"
 #include "sim800c.h"
+#include "ota.h"
+#include "versiyon.h"
 
 static const char *TAG = "MAIN";
 
-/* ── SIM800C UART fiziksel baglanti ──────────────────────────────── */
+/* ────────────────────── SIM800C UART fiziksel baglanti ────────────────────── */
 #define SIM800C_UART_PORT     (UART_NUM_2)
 #define SIM800C_TX_PIN        (    17    )
 #define SIM800C_RX_PIN        (    16    )
-#define SIM800C_RX_BUF_SIZE   (  32768   )
-#define SIM800C_TX_BUF_SIZE   (  1024    )
+#define SIM800C_RX_BUF_SIZE   (   32768  )
+#define SIM800C_TX_BUF_SIZE   (   1024   )
 
-/* sim800c driver UART handle'i callback'lerden erismek icin globalde tutulur */
+
 static uart_handle_t g_sim_uart;
 
-
-/* ── sim800c_io_t wrapper fonksiyonlari ──────────────────────────── */
-static void sim_send(const uint8_t *data, size_t len)
-{
-    uart_gonder(g_sim_uart, data, (int)len);
-}
-
-static int sim_read(uint8_t *buf, size_t len, uint32_t timeout_ms)
-{
-    return uart_oku(g_sim_uart, buf, (int)len, timeout_ms);
-}
-
-static void sim_log(const char *msg)
-{
-    ESP_LOGI(TAG, "%s", msg);
-}
-
-static void sim_set_baud(uint32_t baud)
-{
-    uart_baud_degistir(g_sim_uart, (int)baud);
-}
-
-static void sim_flush(void)
-{
-    uart_temizle(g_sim_uart);
-}
+/* ────────── sim800c_io_t wrapper fonksiyon prototipleri ──────────────────── */
+static void sim_send    (const uint8_t *data, size_t len                     );
+static int  sim_read    (      uint8_t *buf , size_t len, uint32_t timeout_ms);
+static void sim_log     (const char    *msg                                  );
+static void sim_set_baud(      uint32_t baud                                 );
+static void sim_flush   (void                                                );
 
 
 void app_main(void)
 {
-    static sim800c_io_t io =
-    {
-        .send     = sim_send    ,
-        .read     = sim_read    ,
-        .log      = sim_log     ,
-        .set_baud = sim_set_baud,
-        .flush    = sim_flush   ,
-    };
-
-    uart_cfg_t uart_cfg =
+    uart_cfg_t uart_konfigurasyonu_st =
     {
         .port_num      = SIM800C_UART_PORT        ,
         .tx_pin        = SIM800C_TX_PIN           ,
@@ -70,19 +43,20 @@ void app_main(void)
         .stop_bitleri  = UART_STOP_BITS_1         ,
         .akis_kontrolu = UART_HW_FLOWCTRL_DISABLE ,
     };
+    g_sim_uart = uart_baslat(&uart_konfigurasyonu_st);
 
-    char json_buf[512];
-    int  okunan;
+    static sim800c_io_t fp_sim800c_fonksiyonlar_st =
+    {
+        .send     = sim_send    ,
+        .read     = sim_read    ,
+        .log      = sim_log     ,
+        .set_baud = sim_set_baud,
+        .flush    = sim_flush   ,
+    };
+    sim800c_init(&fp_sim800c_fonksiyonlar_st);
+    
+    ESP_LOGI(TAG, "Firmware v%s basliyor...", YAZILIM_VERSIYON);
 
-    ESP_LOGI(TAG, "Firmware v%s basliyor...", FIRMWARE_VERSION);
-
-    /* 1) UART2'yi baslat (TX=17, RX=16, 115200 baud) */
-    g_sim_uart = uart_baslat(&uart_cfg);
-
-    /* 2) sim800c driver'ini baslat (reader task ayaga kalkar) */
-    sim800c_init(&io);
-
-    /* 3) Modul ile iletisim testi + baud senkronizasyonu */
     if ( 0 != sim800c_baslat() )
     {
         ESP_LOGE(TAG, "SIM800C modulu baslatilamadi!");
@@ -96,21 +70,63 @@ void app_main(void)
         return;
     }
 
-    /* 5) Smoke test: version.json'i cek */
-    okunan = sim800c_http_get_json(OTA_VERSION_URL, json_buf, sizeof(json_buf));
-    if ( 0 < okunan )
+    ota_firmware_bilgi_t firmware_bilgi_st;
+    ota_sonuc_t          ota_sonuc        ;
+
+    ota_sonuc = ota_kontrol(&firmware_bilgi_st);
+
+    switch ( ota_sonuc )
     {
-        ESP_LOGI(TAG, "version.json (%d byte): %s", okunan, json_buf);
-    }
-    else
-    {
-        ESP_LOGE(TAG, "version.json alinamadi!");
+        case OTA_OK:
+            ESP_LOGI(TAG, "Yeni firmware bulundu, guncellemeye baslaniyor...");
+            ota_sonuc = ota_guncelle(&firmware_bilgi_st);
+            if ( OTA_OK != ota_sonuc )
+            {
+                ESP_LOGE(TAG, "OTA guncelleme basarisiz, kod=%d", ota_sonuc);
+            }
+        break;
+
+        case OTA_GUNCEL:
+            ESP_LOGI(TAG, "Firmware zaten guncel, devam ediliyor.");
+        break;
+
+        default:
+            ESP_LOGE(TAG, "OTA kontrol hatasi, kod=%d", ota_sonuc);
+        break;
     }
 
     ESP_LOGI(TAG, "Normal calisma basliyor...");
     while ( 1 )
     {
         vTaskDelay(pdMS_TO_TICKS(10000));
-        ESP_LOGI(TAG, "Calisiyorum... v%s", FIRMWARE_VERSION);
+        ESP_LOGI(TAG, "Calisiyorum... v%s", YAZILIM_VERSIYON);
     }
+}
+
+
+
+
+
+
+
+/* ── sim800c_io_t wrapper fonksiyonlari ──────────────────────────── */
+static void sim_send(const uint8_t *data, size_t len)
+{
+    uart_gonder(g_sim_uart, data, (int)len);
+}
+static int sim_read(uint8_t *buf, size_t len, uint32_t timeout_ms)
+{
+    return uart_oku(g_sim_uart, buf, (int)len, timeout_ms);
+}
+static void sim_log(const char *msg)
+{
+    ESP_LOGI(TAG, "%s", msg);
+}
+static void sim_set_baud(uint32_t baud)
+{
+    uart_baud_degistir(g_sim_uart, (int)baud);
+}
+static void sim_flush(void)
+{
+    uart_temizle(g_sim_uart);
 }

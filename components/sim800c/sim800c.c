@@ -66,6 +66,7 @@ int sim800c_baslat(void)
     static const uint32_t baud_listesi[] = { 115200U, 9600U, 19200U, 38400U, 57600U };
     const    int          baud_sayisi    = sizeof(baud_listesi) / sizeof(baud_listesi[0]);
     uint32_t              bulunan_baud   = 0U;
+    uint8_t               autobaud_ok    = 0U;
     int                   i;
 
     /* Modulun boot'u tamamlamasi icin bekle (SIM800C typical ~3 sn) */
@@ -98,6 +99,7 @@ int sim800c_baslat(void)
     if ( 0 == sim800c_cmd_wait(AT_AUTOBAUD, "OK", BEKLE_2_SN) )
     {
         sim800c_logf("Autobaud modu acildi (AT+IPR=0)");
+        autobaud_ok = 1U;
 
         if ( 0 == sim800c_cmd_wait(AT_SAVE_CONFIG, "OK", BEKLE_2_SN) )
         {
@@ -110,11 +112,13 @@ int sim800c_baslat(void)
     }
     else
     {
-        sim800c_logf("UYARI: AT+IPR=0 basarisiz — autobaud'a alinamadi");
+        sim800c_logf("UYARI: AT+IPR=0 basarisiz — modul hala sabit %u baud'da, hedef baud'a gecis yapilmayacak", (unsigned)bulunan_baud);
     }
 
-    /* --- 3) Hedef baud'a (115200) gec -------------------------------- */
-    if ( SIM800C_HEDEF_BAUD_RATE != bulunan_baud )
+    /* --- 3) Hedef baud'a (115200) gec — SADECE autobaud basariliysa -- *
+     * Autobaud yoksa modul hala bulunan_baud'da sabit; 115200'e gecmek
+     * iletisimi kirmak demek — bu yuzden bulunan_baud'da devam edilir.  */
+    if ( (0U != autobaud_ok) && (SIM800C_HEDEF_BAUD_RATE != bulunan_baud) )
     {
         sim_arayuz->set_baud(SIM800C_HEDEF_BAUD_RATE);
         vTaskDelay(pdMS_TO_TICKS(100));
@@ -127,7 +131,14 @@ int sim800c_baslat(void)
         sim800c_logf("Baud gecisi: %u -> %u OK", (unsigned)bulunan_baud, SIM800C_HEDEF_BAUD_RATE);
     }
 
-    sim800c_logf("Modul hazir: Baud=%u", SIM800C_HEDEF_BAUD_RATE);
+    if ( 0U != autobaud_ok )
+    {
+        sim800c_logf("Modul hazir: Baud=%u (autobaud aktif)", SIM800C_HEDEF_BAUD_RATE);
+    }
+    else
+    {
+        sim800c_logf("Modul hazir: Baud=%u (autobaud yok, tarama baud'unda devam)", (unsigned)bulunan_baud);
+    }
     return 0;
 }
 
@@ -403,6 +414,9 @@ int sim800c_http_get_json(const char *url, char *out_buf, int out_max)
     const char *json_son               ;
     int        uzunluk           = 0   ;
 
+    /* Defansif: onceki acilan oturum varsa kapat (hata varsa gormezden gel) */
+    sim800c_cmd_wait(AT_HTTP_TERM, "OK", BEKLE_3_SN);
+
     if(sim800c_cmd_wait(AT_HTTP_INIT, "OK", BEKLE_3_SN) == 0)
     {
         sim800c_logf("HTTP Baslatildi.");
@@ -493,6 +507,9 @@ static int sim800c_http_open_adimlari(const char *url, int *total_len)
     int         kod                  ;
     int         uzunluk              ;
 
+    /* Defansif: onceki acilan oturum varsa kapat (hata varsa gormezden gel) */
+    sim800c_cmd_wait(AT_HTTP_TERM, "OK", BEKLE_3_SN);
+
     if ( sim800c_cmd_wait(AT_HTTP_INIT, "OK", BEKLE_3_SN) != 0 )
     {
         sim800c_logf("HTTP Baslatilamadi!!!");
@@ -515,7 +532,7 @@ static int sim800c_http_open_adimlari(const char *url, int *total_len)
     }
     sim800c_logf("URL Ayarlandi: %s", url);
 
-    if ( sim800c_cmd_wait(AT_HTTP_GET, "+HTTPACTION:", BEKLE_30_SN) != 0 )
+    if ( sim800c_cmd_wait(AT_HTTP_GET, "+HTTPACTION:", BEKLE_120_SN) != 0 )
     {
         sim800c_logf("HTTP GET Basarisiz!!!");
         return -1;
