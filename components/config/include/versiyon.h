@@ -13,6 +13,20 @@
  *================================================================*/
 
 /*******************************************************************
+ * Versiyon       : v1.5.1
+ * Branch         : main
+ * Kullanilan SDK : ESP-IDF v5.5
+ * Kullanilan IDE : Visual Studio Code
+ *=================================================================
+* Yazar           : Hasan Basri SOYLU
+* Tarih           : 27.04.2026
+*==================================================================
+* Aciklama        : Sim800C derlendi ve yeni bir alt yapıya geçti 
+                    bu sebepten test edilmesi gereken versiyondur.
+*******************************************************************/
+
+
+/*******************************************************************
  * Versiyon       : v1.5.0
  * Branch         : main
  * Kullanilan SDK : ESP-IDF v5.5

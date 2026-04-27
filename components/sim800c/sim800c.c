@@ -6,6 +6,16 @@
 #include "at_commands.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/stream_buffer.h"
+
+
+
+typedef enum 
+{
+    SIM_RX_LINE        ,
+    SIM_RX_HTTP_BINARY ,
+    SIM_RX_TCP_BINARY
+}sim_rx_modu_t;
 
 
 /* ──────────────────── Static Degiskenler ───────────────────────
@@ -17,14 +27,17 @@ static volatile sim800c_state_t sim_durum          = SIM800C_IDLE               
 static char                     sim_cevap[4096]                                  ;   // gelen tüm satırlar (her komut öncesi sıfırlanır)
 static char                     sim_son_komut[128]                               ;   // gönderilen son komut (echo karşılaştırması için)
 static portMUX_TYPE             sim_mux            = portMUX_INITIALIZER_UNLOCKED;   // critical section kilidi (dual-core koruması)
-static volatile uint8_t         sim_binary_modu    = 0                           ;
+
+static volatile sim_rx_modu_t        sim_rx_modu  = SIM_RX_LINE;   // reader_task mod
+static volatile uint32_t             sim_rx_kalan = 0          ;   // binary modda kalan byte
+static          StreamBufferHandle_t sim_http_sb  = NULL       ;   // HTTP binary stream
+static          StreamBufferHandle_t sim_tcp_sb   = NULL       ;   // TCP  binary stream
 
 
 /* ──────────────────── Static Fonksiyonlar ─────────────────────── */
 static void sim800c_reader_task(void *arg);
 static void sim800c_logf(const char *fmt, ...);
 static void sim800c_process_line(const char *line);
-static int  sim800c_cmd_wait(const char *cmd, const char *beklenen, uint32_t timeout_ms);
 static int  sim800c_http_open_adimlari(const char *url, int *total_len);
 static int  sim800c_http_read_adimlari(int offset, uint8_t *out_buf, int size, int *out_len);
 
@@ -53,8 +66,18 @@ void sim800c_init(sim800c_io_t *io)
 {
     sim_arayuz = io;
     sim_durum  = SIM800C_IDLE;
+    
     memset(sim_cevap,     0, sizeof(sim_cevap));
     memset(sim_son_komut, 0, sizeof(sim_son_komut));
+
+    sim_http_sb = xStreamBufferCreate(2048, 1);   // 2KB buffer, 1 byte trigger
+    sim_tcp_sb  = xStreamBufferCreate(2048, 1);
+
+    if ( (NULL == sim_http_sb) || (NULL == sim_tcp_sb) )
+    {
+        sim800c_logf("HATA: StreamBuffer olusturulamadi (RAM yetersiz?)");
+        return;
+    }
 
     xTaskCreate(sim800c_reader_task, "sim800c_reader", 4096, NULL, 5, NULL);
 }
@@ -62,17 +85,14 @@ void sim800c_init(sim800c_io_t *io)
 
 int sim800c_baslat(void)
 {
-    /* Yaygin SIM800C baud'lari — sirayla denenir. 115200 ilk, cunku hedef baud budur */
     static const uint32_t baud_listesi[] = { 115200U, 9600U, 19200U, 38400U, 57600U };
     const    int          baud_sayisi    = sizeof(baud_listesi) / sizeof(baud_listesi[0]);
     uint32_t              bulunan_baud   = 0U;
     uint8_t               autobaud_ok    = 0U;
     int                   i;
 
-    /* Modulun boot'u tamamlamasi icin bekle (SIM800C typical ~3 sn) */
     vTaskDelay(pdMS_TO_TICKS(3000));
 
-    /* --- 1) Baud taramasi: hangi hizda cevap veriyor? ---------------- */
     for ( i = 0; i < baud_sayisi; i++ )
     {
         sim800c_logf("Baud taraniyor: %u", (unsigned)baud_listesi[i]);
@@ -93,9 +113,6 @@ int sim800c_baslat(void)
         return -1;
     }
 
-    /* --- 2) Modulu kalici olarak autobaud'a al ----------------------- *
-     * AT+IPR=0 + AT&W → gelecekte hangi baud'da acilirsak acilalim
-     * ilk AT ile sync olur, bu sorun bir daha yasanmaz.                */
     if ( 0 == sim800c_cmd_wait(AT_AUTOBAUD, "OK", BEKLE_2_SN) )
     {
         sim800c_logf("Autobaud modu acildi (AT+IPR=0)");
@@ -115,9 +132,6 @@ int sim800c_baslat(void)
         sim800c_logf("UYARI: AT+IPR=0 basarisiz — modul hala sabit %u baud'da, hedef baud'a gecis yapilmayacak", (unsigned)bulunan_baud);
     }
 
-    /* --- 3) Hedef baud'a (115200) gec — SADECE autobaud basariliysa -- *
-     * Autobaud yoksa modul hala bulunan_baud'da sabit; 115200'e gecmek
-     * iletisimi kirmak demek — bu yuzden bulunan_baud'da devam edilir.  */
     if ( (0U != autobaud_ok) && (SIM800C_HEDEF_BAUD_RATE != bulunan_baud) )
     {
         sim_arayuz->set_baud(SIM800C_HEDEF_BAUD_RATE);
@@ -148,12 +162,9 @@ void sim800c_send_command(const char *cmd)
     char    buf[160];
     uint8_t idle_mi ;
 
-    /* snprintf critical section DISINDA yapilir — 115200 baud'da UART ISR
-     * sikligi critical + snprintf kombinasyonuyla panik uretebiliyor (gercek hata). */
     snprintf(sim_son_komut, sizeof(sim_son_komut), "%s", cmd);  // Echo kontrolu icin sakla
     snprintf(buf, sizeof(buf), "%s\r\n", cmd);
 
-    /* Kilit sadece sim_durum atomik check-and-update icin */
     portENTER_CRITICAL(&sim_mux);
     idle_mi = (uint8_t)(SIM800C_IDLE == sim_durum);
     if(idle_mi)
@@ -176,31 +187,61 @@ void sim800c_send_command(const char *cmd)
 
 static void sim800c_process_line(const char *line)
 {
-    uint32_t dolu_uzunluk;
-    uint32_t bos_alan    ;
+    uint32_t dolu_uzunluk    ;
+    uint32_t bos_alan        ;
+    int      beklenen_len = 0;
 
-    if( (NULL != line) && ('\0' != line[0]) )
+    if( (NULL == line) || ('\0' == line[0]) )
     {
-        if(SIM800C_ECHO_BEKLE == sim_durum)
+        return;
+    }
+
+    /* ─────────── URC: Binary mod tetikleyiciler ─────────── */
+
+    /* +HTTPREAD: N  → sonraki N byte http_sb'ye akacak */
+    if( NULL != strstr(line, "+HTTPREAD:"))
+    {
+        sscanf(strstr(line, "+HTTPREAD:"),  "+HTTPREAD: %d", &beklenen_len);
+        if( 0 < beklenen_len )
         {
-            if( 0 == strncmp(line, sim_son_komut, strlen(sim_son_komut)) )
-            {
-                portENTER_CRITICAL(&sim_mux);
-                sim_durum = SIM800C_CEVAP_BEKLE;
-                portEXIT_CRITICAL(&sim_mux);
-                sim800c_logf("Echo alindi: %s", line);
-            }
+            sim_rx_kalan = (uint32_t)beklenen_len;
+            sim_rx_modu  = SIM_RX_HTTP_BINARY;
+            sim800c_logf("HTTP binary mod: %d byte bekleniyor", beklenen_len);
         }
-        else if(SIM800C_CEVAP_BEKLE == sim_durum)
+        /* return YOK — bu satir sim_cevap'a da yazilsin (cmd_wait icin) */
+    }
+     /* +RECEIVE,N:  → sonraki N byte tcp_sb'ye akacak */
+    else if ( 0 == strncmp(line, "+RECEIVE,", 9) )
+    {
+        sscanf(line, "+RECEIVE,%d", &beklenen_len);
+        if( 0 < beklenen_len)
         {
-            /* sim_cevap'a sadece reader_task yazar (tek yazar), critical gereksiz.
-             * snprintf critical icinde olmamali — panik sebebi. */
+            sim_rx_kalan = (uint32_t)beklenen_len;
+            sim_rx_modu = SIM_RX_TCP_BINARY;
+            sim800c_logf("TCP binary mod: %d byte bekleniyor", beklenen_len);
+        }
+        return;   /* +RECEIVE sim_cevap'a yazilmasin, TCP layer zaten sb'den okuyacak */
+    }
+
+    /* ─────────── Mevcut state machine davranisi ─────────── */
+    if( SIM800C_ECHO_BEKLE == sim_durum)
+    {
+        if ( 0 == strncmp(line, sim_son_komut, strlen(sim_son_komut)) )
+        {
+            portENTER_CRITICAL(&sim_mux);
+            sim_durum = SIM800C_CEVAP_BEKLE;
+            portEXIT_CRITICAL(&sim_mux);
+            sim800c_logf("Echo alindi: %s", line);
+        }
+        else if( SIM800C_CEVAP_BEKLE == sim_durum )
+        {
             dolu_uzunluk = strlen(sim_cevap);
-            bos_alan     = sizeof(sim_cevap) - dolu_uzunluk - 1;
-            snprintf(sim_cevap + dolu_uzunluk, bos_alan, "%s\n", line);
+            bos_alan     = sizeof(sim_cevap) - dolu_uzunluk -1;
+            snprintf( (sim_cevap + dolu_uzunluk), bos_alan, "%s\n", line );
             sim800c_logf("Satir alindi: %s", line);
         }
     }
+
 }
 
 
@@ -214,41 +255,80 @@ static void sim800c_reader_task(void *arg)
 
     while(true)
     {
-        if ( 0 != sim_binary_modu )
+        ret = sim_arayuz->read(&byte, 1, 100);
+
+        if(SIM800C_VERI_VAR != ret)
         {
-            vTaskDelay(pdMS_TO_TICKS(10));
             continue;
         }
 
-        ret = sim_arayuz->read(&byte, 1, 100);
-
-        if(SIM800C_VERI_VAR == ret)
+        switch (sim_rx_modu)
         {
-            if('\r' == byte)
-            {
-                // Yok Say
-            }
-            else if('\n' == byte)
-            {
-                if(false == over_flow)
-                {
-                    line_buf[line_pos] = '\0';
-                    sim800c_process_line(line_buf);
-                }
-                line_pos  = 0;
-                over_flow = false;
-            }
-            else
-            {
-                line_buf[line_pos] = byte;
-                line_pos++;
 
-                if(line_pos >= sizeof(line_buf))
+            /* ─────────── LINE MODU: mevcut davranis ─────────── */
+            case SIM_RX_LINE:
+            {
+                if('\r' == byte)
                 {
-                    sim800c_logf("Buffer overFlow, satir sifirlandi");
-                    line_pos  = 0;
-                    over_flow = true;
+                    /* yok say*/
                 }
+                else if('\n' == byte)
+                {
+                    if ( false == over_flow )
+                    {
+                        line_buf[line_pos] = '\0';
+                        sim800c_process_line(line_buf);
+                    }
+                    line_pos  = 0    ;
+                    over_flow = false;
+                }
+                else
+                {
+                    line_buf[line_pos] = byte;
+                    line_pos++;
+
+                    if ( line_pos >= sizeof(line_buf) )
+                    {
+                        sim800c_logf("Buffer overFlow, satir sifirlandi");
+                        line_pos  = 0;
+                        over_flow = true;
+                    }
+                }
+                break;
+            }
+             /* ─────────── HTTP BINARY MODU: N byte → http_sb ─────────── */
+            case SIM_RX_HTTP_BINARY:
+            {
+                xStreamBufferSend(sim_http_sb, &byte, 1, 0);
+                sim_rx_kalan--;
+
+                if( 0 == sim_rx_kalan)
+                {
+                    sim_rx_modu = SIM_RX_LINE;
+                    sim800c_logf("HTTP binary tamamlandi, LINE moda dondu");
+                }
+                break;
+            }
+
+            /* ─────────── TCP BINARY MODU: N byte → tcp_sb ─────────── */
+            case SIM_RX_TCP_BINARY:
+            {
+                xStreamBufferSend(sim_tcp_sb, &byte, 1, 0);
+                sim_rx_kalan--;
+
+                if(0 == sim_rx_kalan)
+                {
+                    sim_rx_modu = SIM_RX_LINE;
+                    sim800c_logf("TCP binary tamamlandi, LINE moda dondu");
+                }
+                break;
+            }
+
+            /* ─────────── HATALI MOD ATAMASI ─────────── */
+            default:
+            {
+                sim800c_logf("Hatali Okuma Modu Atandi");
+                break;
             }
         }
     }
@@ -267,7 +347,7 @@ const char *sim800c_get_response(void)
 }
 
 
-static int sim800c_cmd_wait(const char *cmd, const char *beklenen, uint32_t timeout_ms)
+int sim800c_cmd_wait(const char *cmd, const char *beklenen, uint32_t timeout_ms)
 {
     uint32_t gecen_sure = 0;
 
@@ -414,7 +494,6 @@ int sim800c_http_get_json(const char *url, char *out_buf, int out_max)
     const char *json_son               ;
     int        uzunluk           = 0   ;
 
-    /* Defansif: onceki acilan oturum varsa kapat (hata varsa gormezden gel) */
     sim800c_cmd_wait(AT_HTTP_TERM, "OK", BEKLE_3_SN);
 
     if(sim800c_cmd_wait(AT_HTTP_INIT, "OK", BEKLE_3_SN) == 0)
@@ -507,7 +586,6 @@ static int sim800c_http_open_adimlari(const char *url, int *total_len)
     int         kod                  ;
     int         uzunluk              ;
 
-    /* Defansif: onceki acilan oturum varsa kapat (hata varsa gormezden gel) */
     sim800c_cmd_wait(AT_HTTP_TERM, "OK", BEKLE_3_SN);
 
     if ( sim800c_cmd_wait(AT_HTTP_INIT, "OK", BEKLE_3_SN) != 0 )
@@ -582,81 +660,43 @@ int sim800c_http_open(const char *url, int *total_len)
 static int sim800c_http_read_adimlari(int offset, uint8_t *out_buf, int size, int *out_len)
 {
     char      komut[64]         ;
-    uint8_t   byte              ;
-    char      header_buf[64]    ;
-    int       header_pos    = 0 ;
-    int       beklenen_len  = 0 ;
     int       okunan        = 0 ;
     int       kalan             ;
-    int       ret               ;
     uint8_t  *p                 ;
 
-    /* Komut: "AT+HTTPREAD=<offset>,<size>\r\n" — reader_task bypass, manuel gonderim */
+    /* Eski verileri at — bu okuma icin temiz bir SB ile basla */
+    xStreamBufferReset(sim_http_sb);
+
+    /* AT+HTTPREAD komutunu gonder (cevap beklemeden, sadece send) */
     snprintf(komut, sizeof(komut), "%s=%d,%d\r\n", AT_HTTP_READ, offset, size);
     sim_arayuz->send( (const uint8_t *)komut, strlen(komut) );
+    sim800c_logf("HTTPREAD gonderildi: offset=%d size=%d", offset, size);
 
-    /* "+HTTPREAD: N\r\n" basligini ara (echo satirini ve bos satirlari atla) */
-    while ( true )
-    {
-        ret = sim_arayuz->read(&byte, 1, 5000);
-        if ( SIM800C_VERI_VAR != ret )
-        {
-            sim800c_logf("HTTPREAD Header Timeout!!!");
-            return -1;
-        }
+    /* Reader_task otomatik:
+     * 1) "+HTTPREAD: N" URC'sini yakalar
+     * 2) sim_rx_modu = SIM_RX_HTTP_BINARY yapar
+     * 3) N byte'i sim_http_sb'ye pushlar
+     * 4) LINE moda geri doner
+     * Biz sadece SB'den okuyoruz. */
 
-        if ( '\n' == byte )
-        {
-            header_buf[header_pos] = '\0';
-
-            if ( NULL != strstr(header_buf, "+HTTPREAD:") )
-            {
-                sscanf(strstr(header_buf, "+HTTPREAD:"), "+HTTPREAD: %d", &beklenen_len);
-                break;
-            }
-            header_pos = 0;
-        }
-        else if ( '\r' != byte )
-        {
-            if ( header_pos < (int)sizeof(header_buf) - 1 )
-            {
-                header_buf[header_pos] = (char)byte;
-                header_pos++;
-            }
-        }
-    }
-
-    if ( beklenen_len <= 0 )
-    {
-        sim800c_logf("HTTPREAD Uzunluk Hatali: %d", beklenen_len);
-        return -1;
-    }
-
-    if ( beklenen_len > size )
-    {
-        sim800c_logf("Beklenenden Fazla Binary: %d > %d", beklenen_len, size);
-        return -1;
-    }
-
-    /* Binary'i toplu halde out_buf'a kopyala */
     p     = out_buf;
-    kalan = beklenen_len;
+    kalan = size;
 
-    while ( kalan > 0 )
+    while(kalan > 0)
     {
-        ret = sim_arayuz->read(p, kalan, 5000);
-        if ( ret <= 0 )
+        size_t alinan = xStreamBufferReceive(sim_http_sb, p, (size_t)kalan, pdMS_TO_TICKS(5000));
+        if(0 == alinan)
         {
-            sim800c_logf("Binary Okuma Timeout: okunan=%d beklenen=%d", okunan, beklenen_len);
+            sim800c_logf("HTTP SB Timeout: okunan=%u beklenen=%d", (unsigned)okunan, size);
             return -1;
         }
-        p      += ret;
-        okunan += ret;
-        kalan  -= ret;
+        p      += alinan    ;
+        okunan += alinan    ;
+        kalan  -=(int)alinan;
     }
 
-    *out_len = okunan;
-    sim800c_logf("HTTP Chunk Okundu: offset=%d, %d byte", offset, okunan);
+    *out_len = (int)okunan;
+    sim800c_logf("HTTP Chunk Okundu: offset=%d, %u byte", offset, (unsigned)okunan);
 
     return 0;
 }
@@ -666,21 +706,14 @@ int sim800c_http_read(int offset, uint8_t *out_buf, int size, int *out_len)
 {
     int geri_donus_degeri;
 
-    /* Binary moduna gec; reader_task'in yield'a girmesi icin 150ms bekle
-     * (read timeout'u 100ms, bir sonraki iterasyonda flag'i gorur) */
-    sim_binary_modu = 1;
     vTaskDelay(pdMS_TO_TICKS(150));
 
-    /* reader_task uyurken UART HW buffer'a dusmus stale byte'lari temizle.
-     * Aksi halde +HTTPREAD: header parser onceki URC'lerin artigina takilabilir. */
     if ( NULL != sim_arayuz->flush )
     {
         sim_arayuz->flush();
     }
 
     geri_donus_degeri = sim800c_http_read_adimlari(offset, out_buf, size, out_len);
-
-    sim_binary_modu = 0;
 
     return geri_donus_degeri;
 }

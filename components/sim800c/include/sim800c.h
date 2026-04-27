@@ -61,6 +61,18 @@ void sim800c_send_command(const char *cmd);
 
 /****************************************************************
  * Yazan         : Hasan Basri Soylu
+ * Fonksiyon     : sim800c_cmd_wait
+ * Parametre     : cmd, beklenen, timeout_ms
+ * Donus Degeri  : 0 -> beklenen string geldi, -1 -> timeout/ERROR
+ * Aciklama      : AT komutu gonderir, cevap buffer'inda "beklenen"
+ *                 string'i gorunene kadar bekler. ERROR gorurse
+ *                 erken cikar.
+ ****************************************************************/
+int sim800c_cmd_wait(const char *cmd, const char *beklenen, uint32_t timeout_ms);
+
+
+/****************************************************************
+ * Yazan         : Hasan Basri Soylu
  * Fonksiyon     : sim800c_get_state
  * Parametre     : void
  * Donus Degeri  : mevcut state

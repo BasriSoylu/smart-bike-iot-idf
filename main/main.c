@@ -27,9 +27,49 @@ static void sim_log     (const char    *msg                                  );
 static void sim_set_baud(      uint32_t baud                                 );
 static void sim_flush   (void                                                );
 
+/* ──────────────────── main fonksiyonlarinin prototipleri ────────────────── */
+static void cevresel_ayarla         ();
+static void cevresel_baslat         ();
+static void yazilim_versiyon_kontrol();
+
 
 void app_main(void)
 {
+    cevresel_ayarla();
+
+    cevresel_baslat();
+
+    yazilim_versiyon_kontrol();
+
+    ESP_LOGI(TAG, "Firmware v%s basliyor...", YAZILIM_VERSIYON);
+
+    while ( 1 )
+    {
+        vTaskDelay(pdMS_TO_TICKS(1000));
+        ESP_LOGI(TAG, "Calisiyorum... v%s", YAZILIM_VERSIYON);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ───────────────────────── main fonksiyonlari  ───────────────────── */
+static void cevresel_ayarla()
+{
+    /* Ilk olarak UART yoksa soft reset yersin.*/
     uart_cfg_t uart_konfigurasyonu_st =
     {
         .port_num      = SIM800C_UART_PORT        ,
@@ -45,6 +85,7 @@ void app_main(void)
     };
     g_sim_uart = uart_baslat(&uart_konfigurasyonu_st);
 
+    /* Simdi sim800c UART ayyarlandiktan sonra */
     static sim800c_io_t fp_sim800c_fonksiyonlar_st =
     {
         .send     = sim_send    ,
@@ -54,9 +95,10 @@ void app_main(void)
         .flush    = sim_flush   ,
     };
     sim800c_init(&fp_sim800c_fonksiyonlar_st);
-    
-    ESP_LOGI(TAG, "Firmware v%s basliyor...", YAZILIM_VERSIYON);
+}
 
+static void cevresel_baslat()
+{
     if ( 0 != sim800c_baslat() )
     {
         ESP_LOGE(TAG, "SIM800C modulu baslatilamadi!");
@@ -69,7 +111,10 @@ void app_main(void)
         ESP_LOGE(TAG, "GPRS baglantisi basarisiz!");
         return;
     }
+}
 
+static void yazilim_versiyon_kontrol()
+{
     ota_firmware_bilgi_t firmware_bilgi_st;
     ota_sonuc_t          ota_sonuc        ;
 
@@ -94,22 +139,9 @@ void app_main(void)
             ESP_LOGE(TAG, "OTA kontrol hatasi, kod=%d", ota_sonuc);
         break;
     }
-
-    ESP_LOGI(TAG, "Normal calisma basliyor...");
-    while ( 1 )
-    {
-        vTaskDelay(pdMS_TO_TICKS(10000));
-        ESP_LOGI(TAG, "Calisiyorum... v%s", YAZILIM_VERSIYON);
-    }
 }
 
-
-
-
-
-
-
-/* ── sim800c_io_t wrapper fonksiyonlari ──────────────────────────── */
+/* ─────────────── sim800c_io_t wrapper fonksiyonlari ─────────────── */
 static void sim_send(const uint8_t *data, size_t len)
 {
     uart_gonder(g_sim_uart, data, (int)len);
