@@ -141,6 +141,9 @@ ota_sonuc_t ota_guncelle(const ota_firmware_bilgi_t *p_bilgi_st)
         int kalan = toplam_boyut - offset;
         int istenen = (kalan > OTA_CHUNK_SIZE) ? OTA_CHUNK_SIZE : kalan;
 
+        ESP_LOGI(TAG, "Chunk istiyor: offset=%d, istenen=%d byte (toplam %d)",
+                 offset, istenen, toplam_boyut);
+
         if( 0 != sim800c_http_read(offset, chunk_buf, istenen, &okunan_byte) )
         {
             ESP_LOGE(TAG, "HTTP read hatasi (offset=%d)!!", offset);

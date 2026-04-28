@@ -95,14 +95,25 @@ int sim800c_baslat(void)
 
     for ( i = 0; i < baud_sayisi; i++ )
     {
+        int j;
+
         sim800c_logf("Baud taraniyor: %u", (unsigned)baud_listesi[i]);
         sim_arayuz->set_baud(baud_listesi[i]);
         vTaskDelay(pdMS_TO_TICKS(100));
 
-        if ( 0 == sim800c_cmd_wait(AT_TEST, "OK", BEKLE_1_SN) )
+        /* Autobaud kilitlenmesi icin 3 deneme + 3sn timeout (modul yavas cevap verebilir) */
+        for ( j = 0; j < 3; j++ )
         {
-            bulunan_baud = baud_listesi[i];
-            sim800c_logf(">>> Modul bulundu: Baud=%u", (unsigned)bulunan_baud);
+            if ( 0 == sim800c_cmd_wait(AT_TEST, "OK", BEKLE_3_SN) )
+            {
+                bulunan_baud = baud_listesi[i];
+                sim800c_logf(">>> Modul bulundu: Baud=%u (deneme %d)", (unsigned)bulunan_baud, j + 1);
+                break;
+            }
+        }
+
+        if ( 0U != bulunan_baud )
+        {
             break;
         }
     }
@@ -224,7 +235,7 @@ static void sim800c_process_line(const char *line)
     }
 
     /* ─────────── Mevcut state machine davranisi ─────────── */
-    if( SIM800C_ECHO_BEKLE == sim_durum)
+    if ( SIM800C_ECHO_BEKLE == sim_durum )
     {
         if ( 0 == strncmp(line, sim_son_komut, strlen(sim_son_komut)) )
         {
@@ -233,15 +244,14 @@ static void sim800c_process_line(const char *line)
             portEXIT_CRITICAL(&sim_mux);
             sim800c_logf("Echo alindi: %s", line);
         }
-        else if( SIM800C_CEVAP_BEKLE == sim_durum )
-        {
-            dolu_uzunluk = strlen(sim_cevap);
-            bos_alan     = sizeof(sim_cevap) - dolu_uzunluk -1;
-            snprintf( (sim_cevap + dolu_uzunluk), bos_alan, "%s\n", line );
-            sim800c_logf("Satir alindi: %s", line);
-        }
     }
-
+    else if ( SIM800C_CEVAP_BEKLE == sim_durum )
+    {
+        dolu_uzunluk = strlen(sim_cevap);
+        bos_alan     = sizeof(sim_cevap) - dolu_uzunluk - 1;
+        snprintf( (sim_cevap + dolu_uzunluk), bos_alan, "%s\n", line );
+        sim800c_logf("Satir alindi: %s", line);
+    }
 }
 
 
@@ -261,6 +271,12 @@ static void sim800c_reader_task(void *arg)
         {
             continue;
         }
+        
+        /* GECICI DEBUG: ham byte log - sorun bulununca silinecek */
+//        sim800c_logf("RX: 0x%02X '%c' modu=%d durum=%d",
+//            byte,
+//                     ((byte >= 32) && (byte < 127)) ? (char)byte : '.',
+//                     (int)sim_rx_modu, (int)sim_durum);
 
         switch (sim_rx_modu)
         {
@@ -547,9 +563,15 @@ int sim800c_http_get_json(const char *url, char *out_buf, int out_max)
         return geri_donus_degeri;
     }   
 
-    if(sim800c_cmd_wait(AT_HTTP_READ, "OK", BEKLE_5_SN) == 0)
+    if ( 0 == sim800c_cmd_wait(AT_HTTP_READ, "OK", BEKLE_5_SN) )
     {
-        sim800c_logf("HTTP Veri Okundu");
+        /* JSON icerik stream buffer'da (reader_task +HTTPREAD URC'sini yakalayip oraya pushladi) */
+        size_t alinan = xStreamBufferReceive(sim_http_sb,
+                                              (uint8_t *)out_buf,
+                                              (size_t)(out_max - 1),
+                                              pdMS_TO_TICKS(1000));
+        out_buf[alinan] = '\0';
+        sim800c_logf("HTTP Veri Okundu (%u byte)", (unsigned)alinan);
     }
     else
     {
@@ -558,15 +580,15 @@ int sim800c_http_get_json(const char *url, char *out_buf, int out_max)
         return geri_donus_degeri;
     }
 
-    json_bas = strchr(sim_cevap, '{');
-    json_son = strrchr(sim_cevap, '}');
+    json_bas = strchr(out_buf, '{');
+    json_son = strrchr(out_buf, '}');
 
-    if( (NULL != json_bas) && (NULL != json_son) && (json_son > json_bas) )
+    if ( (NULL != json_bas) && (NULL != json_son) && (json_son > json_bas) )
     {
         uzunluk = (int)(json_son - json_bas) + 1;
-        if(uzunluk < out_max)
+        if ( uzunluk < out_max )
         {
-            memcpy(out_buf, json_bas, uzunluk);
+            memmove(out_buf, json_bas, uzunluk);
             out_buf[uzunluk] = '\0';
             geri_donus_degeri = uzunluk;
         }
@@ -665,10 +687,13 @@ static int sim800c_http_read_adimlari(int offset, uint8_t *out_buf, int size, in
     uint8_t  *p                 ;
 
     /* Eski verileri at — bu okuma icin temiz bir SB ile basla */
+    sim800c_logf("DBG SB reset basliyor");
     xStreamBufferReset(sim_http_sb);
+    sim800c_logf("DBG SB reset bitti");
 
     /* AT+HTTPREAD komutunu gonder (cevap beklemeden, sadece send) */
     snprintf(komut, sizeof(komut), "%s=%d,%d\r\n", AT_HTTP_READ, offset, size);
+    sim800c_logf("DBG send oncesi: %s", komut);
     sim_arayuz->send( (const uint8_t *)komut, strlen(komut) );
     sim800c_logf("HTTPREAD gonderildi: offset=%d size=%d", offset, size);
 
@@ -706,14 +731,19 @@ int sim800c_http_read(int offset, uint8_t *out_buf, int size, int *out_len)
 {
     int geri_donus_degeri;
 
+    sim800c_logf("DBG http_read girdi: offset=%d size=%d", offset, size);
+
     vTaskDelay(pdMS_TO_TICKS(150));
+    sim800c_logf("DBG vTaskDelay bitti");
 
     if ( NULL != sim_arayuz->flush )
     {
         sim_arayuz->flush();
+        sim800c_logf("DBG flush bitti");
     }
 
     geri_donus_degeri = sim800c_http_read_adimlari(offset, out_buf, size, out_len);
+    sim800c_logf("DBG adimlari donus: %d", geri_donus_degeri);
 
     return geri_donus_degeri;
 }
