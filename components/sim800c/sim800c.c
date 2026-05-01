@@ -217,7 +217,6 @@ static void sim800c_process_line(const char *line)
         {
             sim_rx_kalan = (uint32_t)beklenen_len;
             sim_rx_modu  = SIM_RX_HTTP_BINARY;
-            sim800c_logf("HTTP binary mod: %d byte bekleniyor", beklenen_len);
         }
         /* return YOK — bu satir sim_cevap'a da yazilsin (cmd_wait icin) */
     }
@@ -271,12 +270,6 @@ static void sim800c_reader_task(void *arg)
         {
             continue;
         }
-        
-        /* GECICI DEBUG: ham byte log - sorun bulununca silinecek */
-//        sim800c_logf("RX: 0x%02X '%c' modu=%d durum=%d",
-//            byte,
-//                     ((byte >= 32) && (byte < 127)) ? (char)byte : '.',
-//                     (int)sim_rx_modu, (int)sim_durum);
 
         switch (sim_rx_modu)
         {
@@ -321,7 +314,6 @@ static void sim800c_reader_task(void *arg)
                 if( 0 == sim_rx_kalan)
                 {
                     sim_rx_modu = SIM_RX_LINE;
-                    sim800c_logf("HTTP binary tamamlandi, LINE moda dondu");
                 }
                 break;
             }
@@ -335,7 +327,6 @@ static void sim800c_reader_task(void *arg)
                 if(0 == sim_rx_kalan)
                 {
                     sim_rx_modu = SIM_RX_LINE;
-                    sim800c_logf("TCP binary tamamlandi, LINE moda dondu");
                 }
                 break;
             }
@@ -566,10 +557,10 @@ int sim800c_http_get_json(const char *url, char *out_buf, int out_max)
     if ( 0 == sim800c_cmd_wait(AT_HTTP_READ, "OK", BEKLE_5_SN) )
     {
         /* JSON icerik stream buffer'da (reader_task +HTTPREAD URC'sini yakalayip oraya pushladi) */
-        size_t alinan = xStreamBufferReceive(sim_http_sb,
-                                              (uint8_t *)out_buf,
-                                              (size_t)(out_max - 1),
-                                              pdMS_TO_TICKS(1000));
+        size_t alinan = xStreamBufferReceive  ( sim_http_sb,
+                                                (uint8_t *)out_buf,
+                                                (size_t)(out_max - 1),
+                                                pdMS_TO_TICKS(1000));
         out_buf[alinan] = '\0';
         sim800c_logf("HTTP Veri Okundu (%u byte)", (unsigned)alinan);
     }
@@ -687,15 +678,11 @@ static int sim800c_http_read_adimlari(int offset, uint8_t *out_buf, int size, in
     uint8_t  *p                 ;
 
     /* Eski verileri at — bu okuma icin temiz bir SB ile basla */
-    sim800c_logf("DBG SB reset basliyor");
     xStreamBufferReset(sim_http_sb);
-    sim800c_logf("DBG SB reset bitti");
 
     /* AT+HTTPREAD komutunu gonder (cevap beklemeden, sadece send) */
     snprintf(komut, sizeof(komut), "%s=%d,%d\r\n", AT_HTTP_READ, offset, size);
-    sim800c_logf("DBG send oncesi: %s", komut);
     sim_arayuz->send( (const uint8_t *)komut, strlen(komut) );
-    sim800c_logf("HTTPREAD gonderildi: offset=%d size=%d", offset, size);
 
     /* Reader_task otomatik:
      * 1) "+HTTPREAD: N" URC'sini yakalar
@@ -721,7 +708,6 @@ static int sim800c_http_read_adimlari(int offset, uint8_t *out_buf, int size, in
     }
 
     *out_len = (int)okunan;
-    sim800c_logf("HTTP Chunk Okundu: offset=%d, %u byte", offset, (unsigned)okunan);
 
     return 0;
 }
@@ -731,19 +717,13 @@ int sim800c_http_read(int offset, uint8_t *out_buf, int size, int *out_len)
 {
     int geri_donus_degeri;
 
-    sim800c_logf("DBG http_read girdi: offset=%d size=%d", offset, size);
-
+    /* Yeni mimaride flush gereksiz: reader_task surekli aktif,
+     * byte'lar otomatik stream buffer'a akiyor. Eski sim_binary_modu
+     * dizayninda kalan flush() cagrisi reader ile race'e girip
+     * uart_flush_input deadlock'una yol aciyordu - kaldirildi. */
     vTaskDelay(pdMS_TO_TICKS(150));
-    sim800c_logf("DBG vTaskDelay bitti");
-
-    if ( NULL != sim_arayuz->flush )
-    {
-        sim_arayuz->flush();
-        sim800c_logf("DBG flush bitti");
-    }
 
     geri_donus_degeri = sim800c_http_read_adimlari(offset, out_buf, size, out_len);
-    sim800c_logf("DBG adimlari donus: %d", geri_donus_degeri);
 
     return geri_donus_degeri;
 }

@@ -5,12 +5,37 @@
  *================================================================*/
 #define YAZILIM_VERSIYON_MAJOR  1
 #define YAZILIM_VERSIYON_MINOR  5
-#define YAZILIM_VERSIYON_PATCH  2
-#define YAZILIM_VERSIYON        "1.5.2"
+#define YAZILIM_VERSIYON_PATCH  3
+#define YAZILIM_VERSIYON        "1.5.3"
 
 /*================================================================
  * VERSIYON GECMISI - en yeni ustte
  *================================================================*/
+
+/*******************************************************************
+ * Versiyon       : v1.5.3
+ * Branch         : main
+ * Kullanilan SDK : ESP-IDF v5.5
+ * Kullanilan IDE : Visual Studio Code
+ *=================================================================
+* Yazar           : Hasan Basri SOYLU
+* Tarih           : 25.04.2026
+*==================================================================
+* Aciklama        : sim800c refactor stable - OTA end-to-end
+*                   dogrulandi (237 KB firmware indirildi, MD5
+*                   eslesti, dual-bank flash basarili).
+*                   sim800c_http_read'deki flush() kaldirildi -
+*                   yeni mimari (her zaman aktif reader_task) ile
+*                   uart_flush_input deadlock'una yol aciyordu.
+*                   Eski sim_binary_modu dizayninin son artigi
+*                   temizlendi. Chunk download log'lari kaldirildi
+*                   (HTTPREAD gonderildi, HTTP binary mod, HTTP
+*                   binary tamamlandi, HTTP Chunk Okundu, OTA
+*                   Chunk istiyor) - download loop sessiz, sadece
+*                   acilis/kapanis/hata log'lari.
+*                   Faz 1 KAPANDI. Sonraki: Faz 2 (URC dispatch
+*                   table) veya Faz 3 (TCP primitifleri + MQTT).
+*******************************************************************/
 
 /*******************************************************************
  * Versiyon       : v1.5.2
