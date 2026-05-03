@@ -54,18 +54,6 @@ void app_main(void)
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 /* ───────────────────────── main fonksiyonlari  ───────────────────── */
 static void cevresel_ayarla()
 {

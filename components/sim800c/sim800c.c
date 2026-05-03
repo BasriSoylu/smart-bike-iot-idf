@@ -9,7 +9,6 @@
 #include "freertos/stream_buffer.h"
 
 
-
 typedef enum 
 {
     SIM_RX_LINE        ,
@@ -33,13 +32,35 @@ static volatile uint32_t             sim_rx_kalan = 0          ;   // binary mod
 static          StreamBufferHandle_t sim_http_sb  = NULL       ;   // HTTP binary stream
 static          StreamBufferHandle_t sim_tcp_sb   = NULL       ;   // TCP  binary stream
 
-
 /* ──────────────────── Static Fonksiyonlar ─────────────────────── */
 static void sim800c_reader_task(void *arg);
 static void sim800c_logf(const char *fmt, ...);
 static void sim800c_process_line(const char *line);
 static int  sim800c_http_open_adimlari(const char *url, int *total_len);
 static int  sim800c_http_read_adimlari(int offset, uint8_t *out_buf, int size, int *out_len);
+static void urc_httpread_isle(const char *line);
+static void urc_receive_isle(const char *line);
+
+
+/* ──────────────────── URC Tablo Yapilari ─────────────────────── */
+typedef void (*urc_isleyici_t)(const char *line);
+
+typedef struct {
+    const char     *prefix;
+    urc_isleyici_t  fonksiyon;
+} sim800c_urc_satiri_t;
+
+/* ──────────────────── URC Fihristimiz (Tablo) ─────────────────── */
+static const sim800c_urc_satiri_t urc_tablosu[] = {
+    { "+HTTPREAD:"     , urc_httpread_isle     },
+    { "+RECEIVE,"      , urc_receive_isle      },
+    { "CONNECT OK"     , urc_connect_ok_isle   },
+    { "CONNECT FAIL"   , urc_connect_fail_isle },
+    { "ALREADY CONNECT", urc_already_conn_isle },
+    { "CLOSED"         , urc_closed_isle       },
+};
+
+#define URC_TABLO_BOYUTU (sizeof(urc_tablosu) / sizeof(urc_tablosu[0]))
 
 
 /* ──────────────────── Dahili Log Yardimcisi ─────────────────── */
@@ -81,7 +102,6 @@ void sim800c_init(sim800c_io_t *io)
 
     xTaskCreate(sim800c_reader_task, "sim800c_reader", 4096, NULL, 5, NULL);
 }
-
 
 int sim800c_baslat(void)
 {
@@ -167,7 +187,6 @@ int sim800c_baslat(void)
     return 0;
 }
 
-
 void sim800c_send_command(const char *cmd)
 {
     char    buf[160];
@@ -195,45 +214,70 @@ void sim800c_send_command(const char *cmd)
     }
 }
 
+/* ──────────────────── URC İşleyici Fonksiyonlar ─────────────────── */
+static void urc_httpread_isle(const char *line)
+{
+    int beklenen_len = 0;
+    
+    // Gelen metnin içinden sadece sayıyı (kaç byte geleceğini) çekiyoruz
+    sscanf(strstr(line, "+HTTPREAD:"), "+HTTPREAD: %d", &beklenen_len);
+    
+    if( 0 < beklenen_len )
+    {
+        sim_rx_kalan = (uint32_t)beklenen_len;
+        sim_rx_modu  = SIM_RX_HTTP_BINARY;
+        // İstersen buraya da bir log ekleyebilirsin: 
+        // sim800c_logf("HTTP binary mod: %d byte bekleniyor", beklenen_len);
+    }
+}
+
+static void urc_receive_isle(const char *line)
+{
+    int beklenen_len = 0;
+    
+    // TCP üzerinden gelecek verinin boyutunu okuyoruz
+    sscanf(line, "+RECEIVE,%d", &beklenen_len);
+    
+    if( 0 < beklenen_len)
+    {
+        sim_rx_kalan = (uint32_t)beklenen_len;
+        sim_rx_modu  = SIM_RX_TCP_BINARY;
+        sim800c_logf("TCP binary mod: %d byte bekleniyor", beklenen_len);
+    }
+}
 
 static void sim800c_process_line(const char *line)
 {
     uint32_t dolu_uzunluk    ;
     uint32_t bos_alan        ;
-    int      beklenen_len = 0;
+    bool     urc_yakalandi = false; // Yeni ekledik: Eğer satır bir URC ise bunu bilelim
 
     if( (NULL == line) || ('\0' == line[0]) )
     {
         return;
     }
 
-    /* ─────────── URC: Binary mod tetikleyiciler ─────────── */
-
-    /* +HTTPREAD: N  → sonraki N byte http_sb'ye akacak */
-    if( NULL != strstr(line, "+HTTPREAD:"))
+    /* ─────────── 1. URC Tablosunu Kontrol Et (Yeni Fihrist Sistemi) ─────────── */
+    for (int i = 0; i < URC_TABLO_BOYUTU; i++)
     {
-        sscanf(strstr(line, "+HTTPREAD:"),  "+HTTPREAD: %d", &beklenen_len);
-        if( 0 < beklenen_len )
+        // Gelen satırın içinde tablodaki prefix (kelime) var mı?
+        if (NULL != strstr(line, urc_tablosu[i].prefix))
         {
-            sim_rx_kalan = (uint32_t)beklenen_len;
-            sim_rx_modu  = SIM_RX_HTTP_BINARY;
+            // Kelime bulundu! İlgili fonksiyonu çalıştır.
+            urc_tablosu[i].fonksiyon(line);
+            urc_yakalandi = true;
+            
+            // Eğer gelen veri "+RECEIVE," gibi binary bir datanın habercisiyse, 
+            // bunu standart "sim_cevap" buffer'ına YAZMAMAK için fonksiyondan çıkıyoruz.
+            if (0 == strcmp(urc_tablosu[i].prefix, "+RECEIVE,")) 
+            {
+                return; 
+            }
+            break; // Eşleşmeyi bulduk, tablonun geri kalanına bakmaya gerek yok.
         }
-        /* return YOK — bu satir sim_cevap'a da yazilsin (cmd_wait icin) */
-    }
-     /* +RECEIVE,N:  → sonraki N byte tcp_sb'ye akacak */
-    else if ( 0 == strncmp(line, "+RECEIVE,", 9) )
-    {
-        sscanf(line, "+RECEIVE,%d", &beklenen_len);
-        if( 0 < beklenen_len)
-        {
-            sim_rx_kalan = (uint32_t)beklenen_len;
-            sim_rx_modu = SIM_RX_TCP_BINARY;
-            sim800c_logf("TCP binary mod: %d byte bekleniyor", beklenen_len);
-        }
-        return;   /* +RECEIVE sim_cevap'a yazilmasin, TCP layer zaten sb'den okuyacak */
     }
 
-    /* ─────────── Mevcut state machine davranisi ─────────── */
+/* ─────────── 2. Mevcut State Machine (Echo ve Yanıt Bekleme) ─────────── */
     if ( SIM800C_ECHO_BEKLE == sim_durum )
     {
         if ( 0 == strncmp(line, sim_son_komut, strlen(sim_son_komut)) )
@@ -249,10 +293,13 @@ static void sim800c_process_line(const char *line)
         dolu_uzunluk = strlen(sim_cevap);
         bos_alan     = sizeof(sim_cevap) - dolu_uzunluk - 1;
         snprintf( (sim_cevap + dolu_uzunluk), bos_alan, "%s\n", line );
-        sim800c_logf("Satir alindi: %s", line);
+        
+        // Eğer bu satır bir URC değilse (yani normal bir AT cevabıysa) logla
+        if (!urc_yakalandi) {
+            sim800c_logf("Satir alindi: %s", line);
+        }
     }
 }
-
 
 static void sim800c_reader_task(void *arg)
 {
@@ -341,18 +388,15 @@ static void sim800c_reader_task(void *arg)
     }
 }
 
-
 sim800c_state_t sim800c_get_state(void)
 {
     return sim_durum;
 }
 
-
 const char *sim800c_get_response(void)
 {
     return sim_cevap;
 }
-
 
 int sim800c_cmd_wait(const char *cmd, const char *beklenen, uint32_t timeout_ms)
 {
@@ -386,7 +430,6 @@ int sim800c_cmd_wait(const char *cmd, const char *beklenen, uint32_t timeout_ms)
     sim800c_logf("Timeout: %s", cmd);
     return -1;
 }
-
 
 int sim800c_gprs_connect(void)
 {
@@ -463,7 +506,6 @@ int sim800c_gprs_connect(void)
     return geri_donus_degeri;
 }
 
-
 int sim800c_gprs_disconnect(void)
 {
     int geri_donus_degeri = -1;
@@ -491,7 +533,6 @@ int sim800c_gprs_disconnect(void)
     geri_donus_degeri = 0;
     return geri_donus_degeri;
 }
-
 
 int sim800c_http_get_json(const char *url, char *out_buf, int out_max)
 {
@@ -590,7 +631,6 @@ int sim800c_http_get_json(const char *url, char *out_buf, int out_max)
     return geri_donus_degeri;
 }
 
-
 static int sim800c_http_open_adimlari(const char *url, int *total_len)
 {
     char        url_komutu[256]      ;
@@ -654,7 +694,6 @@ static int sim800c_http_open_adimlari(const char *url, int *total_len)
     return 0;
 }
 
-
 int sim800c_http_open(const char *url, int *total_len)
 {
     int geri_donus_degeri;
@@ -668,7 +707,6 @@ int sim800c_http_open(const char *url, int *total_len)
 
     return geri_donus_degeri;
 }
-
 
 static int sim800c_http_read_adimlari(int offset, uint8_t *out_buf, int size, int *out_len)
 {
@@ -712,7 +750,6 @@ static int sim800c_http_read_adimlari(int offset, uint8_t *out_buf, int size, in
     return 0;
 }
 
-
 int sim800c_http_read(int offset, uint8_t *out_buf, int size, int *out_len)
 {
     int geri_donus_degeri;
@@ -727,7 +764,6 @@ int sim800c_http_read(int offset, uint8_t *out_buf, int size, int *out_len)
 
     return geri_donus_degeri;
 }
-
 
 int sim800c_http_close(void)
 {

@@ -5,12 +5,26 @@
  *================================================================*/
 #define YAZILIM_VERSIYON_MAJOR  1
 #define YAZILIM_VERSIYON_MINOR  5
-#define YAZILIM_VERSIYON_PATCH  3
-#define YAZILIM_VERSIYON        "1.5.3"
+#define YAZILIM_VERSIYON_PATCH  4
+#define YAZILIM_VERSIYON        "1.5.4"
 
 /*================================================================
  * VERSIYON GECMISI - en yeni ustte
  *================================================================*/
+
+/*******************************************************************
+ * Versiyon       : v1.5.4
+ * Branch         : main
+ * Kullanilan SDK : ESP-IDF v5.5
+ * Kullanilan IDE : Visual Studio Code
+ *=================================================================
+* Yazar           : Hasan Basri SOYLU
+* Tarih           : 3.05.2026
+*==================================================================
+* Aciklama        : URC Table kismi tamamlandi. Test edildi ve 
+*                   calistigi gözlendi. TCP fonksiyonlari eklenmeye
+*                   baslandi.
+*******************************************************************/
 
 /*******************************************************************
  * Versiyon       : v1.5.3

@@ -150,5 +150,42 @@ int sim800c_http_read(int offset, uint8_t *out_buf, int size, int *out_len);
  ****************************************************************/
 int sim800c_http_close(void);
 
+/****************************************************************
+ * Yazan         : Hasan Basri Soylu
+ * Fonksiyon     : 
+ * Parametre     : 
+ * Donus Degeri  : 0 → basarili, -1 → hata
+ * Aciklama      :
+ ****************************************************************/
+int sim800c_tcp_open (const char *host, uint16_t port);
+
+/****************************************************************
+ * Yazan         : Hasan Basri Soylu
+ * Fonksiyon     : 
+ * Parametre     : 
+ * Donus Degeri  : 0 → basarili, -1 → hata
+ * Aciklama      : 
+ ****************************************************************/
+int sim800c_tcp_send (const uint8_t *data, size_t len);
+
+/****************************************************************
+ * Yazan         : Hasan Basri Soylu
+ * Fonksiyon     : 
+ * Parametre     : 
+ * Donus Degeri  : 0 → basarili, -1 → hata
+ * Aciklama      : 
+ ****************************************************************/
+int sim800c_tcp_recv (uint8_t *out_buf, size_t max_len, uint32_t timeout_ms, size_t *out_len);
+
+/****************************************************************
+ * Yazan         : Hasan Basri Soylu
+ * Fonksiyon     : 
+ * Parametre     : 
+ * Donus Degeri  : 0 → basarili, -1 → hata
+ * Aciklama      : 
+ ****************************************************************/
+int sim800c_tcp_close(void);
+
+
 
 #endif /* SIM800C_H */
