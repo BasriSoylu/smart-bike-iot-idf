@@ -31,6 +31,7 @@ static void sim_flush   (void                                                );
 static void cevresel_ayarla         ();
 static void cevresel_baslat         ();
 static void yazilim_versiyon_kontrol();
+static void tcp_test                ();
 
 
 void app_main(void)
@@ -39,7 +40,11 @@ void app_main(void)
 
     cevresel_baslat();
 
-    yazilim_versiyon_kontrol();
+    /* OTA su an kapali - TCP/MQTT calismasi sirasinda her boot'ta
+     * GPRS uzerinden 240KB indirme zaman kaybi. Test bitince acilacak. */
+    /* yazilim_versiyon_kontrol(); */
+
+    tcp_test();
 
     ESP_LOGI(TAG, "Firmware v%s basliyor...", YAZILIM_VERSIYON);
 
@@ -99,6 +104,47 @@ static void cevresel_baslat()
         ESP_LOGE(TAG, "GPRS baglantisi basarisiz!");
         return;
     }
+}
+
+static void tcp_test()
+{
+    ESP_LOGI(TAG, "===== TCP RAW HTTP TESTI =====");
+
+    if ( 0 != sim800c_tcp_open("ifconfig.me", 80) )
+    {
+        ESP_LOGE(TAG, "TCP open basarisiz");
+        return;
+    }
+    ESP_LOGI(TAG, "TCP open OK");
+
+    /* Basit HTTP GET - cevap olarak public IP gelmeli */
+    const char *req = "GET /ip HTTP/1.0\r\nHost: ifconfig.me\r\nConnection: close\r\n\r\n";
+    int req_len = (int)strlen(req);
+
+    if ( 0 != sim800c_tcp_send((const uint8_t *)req, req_len) )
+    {
+        ESP_LOGE(TAG, "HTTP GET gonderim basarisiz");
+        sim800c_tcp_close();
+        return;
+    }
+    ESP_LOGI(TAG, "HTTP GET gonderildi (%d byte), cevap bekleniyor", req_len);
+
+    /* Cevap oku - 10 sn timeout */
+    uint8_t resp[256];
+    int n = sim800c_tcp_recv(resp, sizeof(resp) - 1, 10000);
+
+    if ( 0 < n )
+    {
+        resp[n] = '\0';
+        ESP_LOGI(TAG, ">>> %d byte CEVAP GELDI <<<\n%s", n, (char*)resp);
+    }
+    else
+    {
+        ESP_LOGW(TAG, "Cevap yok (n=%d) - TCP recv timeout", n);
+    }
+
+    sim800c_tcp_close();
+    ESP_LOGI(TAG, "===== TCP TESTI BITTI =====");
 }
 
 static void yazilim_versiyon_kontrol()

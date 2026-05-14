@@ -9,7 +9,7 @@
 #define SIM800C_HEDEF_BAUD_RATE    (115200U)
 #define SIM800C_DEFAULT_BAUD_RATE  (9600U)
 
-/* ── IO Arayüzü (Dependency Injection) ─────────────────────────────
+/* ──────────────── IO Arayüzü (Dependency Injection) ────────────────
 * main.c bu struct'ı doldurup sim800c_init()'e verir.
 * ----------------------------------------------------------------- */
 typedef struct {
@@ -20,12 +20,19 @@ typedef struct {
     void (*flush)   (      void                                            );
 } sim800c_io_t;
 
-/* ── State Machine Durumları ────────────────────────────────────── */
+/* ─────────────────── State Machine Durumları ───────────────────── */
 typedef enum {
     SIM800C_IDLE       ,  // Komut bekleniyor
     SIM800C_ECHO_BEKLE ,  // Echo dönmesi bekleniyor
     SIM800C_CEVAP_BEKLE,  // Cevap satırları bekleniyor (beklenen string gelene kadar)
 } sim800c_state_t;
+
+typedef enum
+{
+    TCP_DISCONNECTED ,
+    TCP_CONNECTING   ,
+    TCP_CONNECTED
+} sim_tcp_durum_t;
 
 /* ── Public API ─────────────────────────────────────────────────── */
 
@@ -157,7 +164,7 @@ int sim800c_http_close(void);
  * Donus Degeri  : 0 → basarili, -1 → hata
  * Aciklama      :
  ****************************************************************/
-int sim800c_tcp_open (const char *host, uint16_t port);
+int sim800c_tcp_open(const char *ip, int port);
 
 /****************************************************************
  * Yazan         : Hasan Basri Soylu
@@ -166,7 +173,7 @@ int sim800c_tcp_open (const char *host, uint16_t port);
  * Donus Degeri  : 0 → basarili, -1 → hata
  * Aciklama      : 
  ****************************************************************/
-int sim800c_tcp_send (const uint8_t *data, size_t len);
+int sim800c_tcp_send(const uint8_t *data, int len);
 
 /****************************************************************
  * Yazan         : Hasan Basri Soylu
@@ -175,7 +182,7 @@ int sim800c_tcp_send (const uint8_t *data, size_t len);
  * Donus Degeri  : 0 → basarili, -1 → hata
  * Aciklama      : 
  ****************************************************************/
-int sim800c_tcp_recv (uint8_t *out_buf, size_t max_len, uint32_t timeout_ms, size_t *out_len);
+int sim800c_tcp_recv(uint8_t *out_buf, int max_size, uint32_t timeout_ms);
 
 /****************************************************************
  * Yazan         : Hasan Basri Soylu
@@ -185,6 +192,15 @@ int sim800c_tcp_recv (uint8_t *out_buf, size_t max_len, uint32_t timeout_ms, siz
  * Aciklama      : 
  ****************************************************************/
 int sim800c_tcp_close(void);
+
+/****************************************************************
+ * Yazan         : Hasan Basri Soylu
+ * Fonksiyon     : 
+ * Parametre     : 
+ * Donus Degeri  : TCP_DISCONNECTED, TCP_CONNECTING, TCP_CONNECTED.
+ * Aciklama      : 
+ ****************************************************************/
+sim_tcp_durum_t sim800c_get_tcp_state(void);
 
 
 

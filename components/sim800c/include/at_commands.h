@@ -33,11 +33,12 @@
 #define AT_HTTP_TERM            "AT+HTTPTERM"                        // HTTP sonlandır
 
 /*=========== TCP KOMUTLARI =================*/
-#define AT_CIPMUX_SINGLE        "AT+CIPMUX=0"                        // Tek baglanti modu
-#define AT_CIPSTART             "AT+CIPSTART"                        // Baglanti ac
-#define AT_CIPSEND              "AT+CIPSEND"                         // Veri gonder
-#define AT_CIPCLOSE             "AT+CIPCLOSE"                        // Baglanti kapat
-#define AT_CIPSHUT              "AT+CIPSHUT"                         // PDP context sifirla
+#define AT_CIPMUX_SINGLE        "AT+CIPMUX=0"        // Tek baglanti modu
+#define AT_CIPSTART             "AT+CIPSTART"        // Baglanti ac
+#define AT_CIPSEND              "AT+CIPSEND"         // Veri gonder
+#define AT_CIPCLOSE             "AT+CIPCLOSE"        // Baglanti kapat
+#define AT_CIPSHUT              "AT+CIPSHUT"         // PDP context sifirla
+#define AT_CIPRXGET             "AT+CIPRXGET=1"      // *** YENI: URC tetiklemek icin manuel okuma modu ***
 
 
 #endif // AT_COMMANDS_H

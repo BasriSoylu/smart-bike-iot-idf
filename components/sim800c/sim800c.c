@@ -27,10 +27,11 @@ static char                     sim_cevap[4096]                                 
 static char                     sim_son_komut[128]                               ;   // gönderilen son komut (echo karşılaştırması için)
 static portMUX_TYPE             sim_mux            = portMUX_INITIALIZER_UNLOCKED;   // critical section kilidi (dual-core koruması)
 
-static volatile sim_rx_modu_t        sim_rx_modu  = SIM_RX_LINE;   // reader_task mod
-static volatile uint32_t             sim_rx_kalan = 0          ;   // binary modda kalan byte
-static          StreamBufferHandle_t sim_http_sb  = NULL       ;   // HTTP binary stream
-static          StreamBufferHandle_t sim_tcp_sb   = NULL       ;   // TCP  binary stream
+static volatile sim_rx_modu_t        sim_rx_modu   = SIM_RX_LINE      ;   // reader_task mod
+static volatile uint32_t             sim_rx_kalan  = 0                ;   // binary modda kalan byte
+static          StreamBufferHandle_t sim_http_sb   = NULL             ;   // HTTP binary stream
+static          StreamBufferHandle_t sim_tcp_sb    = NULL             ;   // TCP  binary stream
+static volatile sim_tcp_durum_t      sim_tcp_durum = TCP_DISCONNECTED ;
 
 /* ──────────────────── Static Fonksiyonlar ─────────────────────── */
 static void sim800c_reader_task(void *arg);
@@ -40,6 +41,11 @@ static int  sim800c_http_open_adimlari(const char *url, int *total_len);
 static int  sim800c_http_read_adimlari(int offset, uint8_t *out_buf, int size, int *out_len);
 static void urc_httpread_isle(const char *line);
 static void urc_receive_isle(const char *line);
+static void urc_ipd_isle           (const char *line);
+static void urc_connect_ok_isle    (const char *line);
+static void urc_connect_fail_isle  (const char *line);
+static void urc_already_conn_isle  (const char *line);
+static void urc_closed_isle        (const char *line);
 
 
 /* ──────────────────── URC Tablo Yapilari ─────────────────────── */
@@ -54,6 +60,7 @@ typedef struct {
 static const sim800c_urc_satiri_t urc_tablosu[] = {
     { "+HTTPREAD:"     , urc_httpread_isle     },
     { "+RECEIVE,"      , urc_receive_isle      },
+    { "+IPD,"          , urc_ipd_isle          },
     { "CONNECT OK"     , urc_connect_ok_isle   },
     { "CONNECT FAIL"   , urc_connect_fail_isle },
     { "ALREADY CONNECT", urc_already_conn_isle },
@@ -234,16 +241,55 @@ static void urc_httpread_isle(const char *line)
 static void urc_receive_isle(const char *line)
 {
     int beklenen_len = 0;
-    
+
     // TCP üzerinden gelecek verinin boyutunu okuyoruz
     sscanf(line, "+RECEIVE,%d", &beklenen_len);
-    
+
     if( 0 < beklenen_len)
     {
         sim_rx_kalan = (uint32_t)beklenen_len;
         sim_rx_modu  = SIM_RX_TCP_BINARY;
         sim800c_logf("TCP binary mod: %d byte bekleniyor", beklenen_len);
     }
+}
+
+/* +IPD,<len>: prefix - AT+CIPHEAD=1 ile aktif olur, +RECEIVE'nin alternatifi */
+static void urc_ipd_isle(const char *line)
+{
+    int beklenen_len = 0;
+
+    sscanf(line, "+IPD,%d", &beklenen_len);
+
+    if ( 0 < beklenen_len )
+    {
+        sim_rx_kalan = (uint32_t)beklenen_len;
+        sim_rx_modu  = SIM_RX_TCP_BINARY;
+        sim800c_logf("TCP binary mod (+IPD): %d byte bekleniyor", beklenen_len);
+    }
+}
+
+static void urc_connect_ok_isle    (const char *line)
+{
+    sim_tcp_durum = TCP_CONNECTED;
+    sim800c_logf("TCP baglandi");
+}
+
+static void urc_connect_fail_isle  (const char *line)
+{
+    sim_tcp_durum = TCP_DISCONNECTED;
+    sim800c_logf("TCP baglanti hatasi");
+}
+
+static void urc_already_conn_isle  (const char *line)
+{
+    sim_tcp_durum = TCP_CONNECTED;
+    sim800c_logf("TCP zaten bagli");
+}
+
+static void urc_closed_isle        (const char *line)
+{
+    sim_tcp_durum = TCP_DISCONNECTED;
+    sim800c_logf("TCP baglanti kapandi");
 }
 
 static void sim800c_process_line(const char *line)
@@ -267,11 +313,12 @@ static void sim800c_process_line(const char *line)
             urc_tablosu[i].fonksiyon(line);
             urc_yakalandi = true;
             
-            // Eğer gelen veri "+RECEIVE," gibi binary bir datanın habercisiyse, 
+            // Eğer gelen veri "+RECEIVE," veya "+IPD," gibi binary bir datanın habercisiyse,
             // bunu standart "sim_cevap" buffer'ına YAZMAMAK için fonksiyondan çıkıyoruz.
-            if (0 == strcmp(urc_tablosu[i].prefix, "+RECEIVE,")) 
+            if ( (0 == strcmp(urc_tablosu[i].prefix, "+RECEIVE,")) ||
+                 (0 == strcmp(urc_tablosu[i].prefix, "+IPD,"     )) )
             {
-                return; 
+                return;
             }
             break; // Eşleşmeyi bulduk, tablonun geri kalanına bakmaya gerek yok.
         }
@@ -318,6 +365,12 @@ static void sim800c_reader_task(void *arg)
             continue;
         }
 
+        /* GECICI DEBUG: raw byte log */
+        sim800c_logf("RX: 0x%02X '%c' modu=%d",
+                     byte,
+                     ((byte >= 32) && (byte < 127)) ? (char)byte : '.',
+                     (int)sim_rx_modu);
+
         switch (sim_rx_modu)
         {
 
@@ -337,6 +390,16 @@ static void sim800c_reader_task(void *arg)
                     }
                     line_pos  = 0    ;
                     over_flow = false;
+                }
+                else if ( ('>' == byte) && (0 == line_pos) )
+                {
+                    /* SIM800 CIPSEND/HTTP veri prompt'u - \r\n ile bitmiyor,
+                     * tek karakter geliyor. Hemen process_line'a teslim et
+                     * ki cmd_wait ">" karakterini sim_cevap'ta gorsun. */
+                    line_buf[0] = '>';
+                    line_buf[1] = '\0';
+                    sim800c_process_line(line_buf);
+                    /* line_pos zaten 0 */
                 }
                 else
                 {
@@ -779,5 +842,125 @@ int sim800c_http_close(void)
         sim800c_logf("HTTP Oturumu Kapatilamadi!!!");
     }
 
-    return geri_donus_degeri;
+    return geri_donus_degeri;   
+}
+
+/* ──────────────────── TCP / IP Katmanı ─────────────────────── */
+
+int sim800c_tcp_open(const char *ip, int port)
+{
+    char komut[128];
+
+    /* Onceki IP state'ini sifirla - CIPMUX ancak temiz state'te degistirilebilir */
+    sim800c_cmd_wait("AT+CIPSHUT", "SHUT OK", BEKLE_5_SN);
+
+    // 1. Tek bağlantı moduna geç
+    if (sim800c_cmd_wait(AT_CIPMUX_SINGLE, "OK", BEKLE_3_SN) != 0)
+    {
+        sim800c_logf("TCP: CIPMUX ayarlanamadi!");
+        return -1;
+    }
+
+    /* TCP verisi geldiginde "+IPD,<len>:" prefix eklenmesi icin */
+    sim800c_cmd_wait("AT+CIPHEAD=1", "OK", BEKLE_3_SN);
+
+    /* NOT: AT+CIPRXGET=1 (manuel mod) CIKARILDI.
+     * Default mod (CIPRXGET=0 - otomatik) gerekli cunku +RECEIVE,N: URC'si
+     * bizim reader_task'in HTTP_BINARY/TCP_BINARY state machine'i ile
+     * uyumlu. Manuel mod +CIPRXGET: 1,N notification doner, yeniden
+     * AT+CIPRXGET=2,N ile cekmek gerek - mevcut mimariyle uyumsuz. */
+
+    // 2. TCP Bağlantısını Başlatıyoruz (Senin AT_CIPSTART makronu kullanarak)
+    snprintf(komut, sizeof(komut), "%s=\"TCP\",\"%s\",\"%d\"", AT_CIPSTART, ip, port);
+    sim800c_logf("TCP Baglaniliyor: %s:%d", ip, port);
+    
+    if (sim800c_cmd_wait(komut, "CONNECT OK", BEKLE_30_SN) == 0)
+    {
+        sim800c_logf("TCP Baglantisi Basarili!");
+        return 0;
+    }
+
+    sim800c_logf("TCP Baglantisi Kurulamadi!");
+    return -1;
+}
+
+int sim800c_tcp_send(const uint8_t *data, int len)
+{
+    char komut[32];
+    uint32_t gecen_sure = 0;
+
+    // Senin AT_CIPSEND makronu kullanarak uzunluğu ekliyoruz
+    snprintf(komut, sizeof(komut), "%s=%d", AT_CIPSEND, len);
+    
+    if (sim800c_cmd_wait(komut, ">", BEKLE_5_SN) != 0)
+    {
+        sim800c_logf("TCP: Veri gonderim istegi reddedildi!");
+        return -1;
+    }
+
+    portENTER_CRITICAL(&sim_mux);
+    sim_durum = SIM800C_CEVAP_BEKLE; 
+    memset(sim_cevap, 0, sizeof(sim_cevap));
+    portEXIT_CRITICAL(&sim_mux);
+
+    sim_arayuz->send(data, len);
+
+    while (gecen_sure < 10000)
+    {
+        if (strstr(sim_cevap, "SEND OK") != NULL)
+        {
+            sim_durum = SIM800C_IDLE;
+            sim800c_logf("TCP: %d byte basariyla gonderildi.", len);
+            return 0;
+        }
+        if (strstr(sim_cevap, "SEND FAIL") != NULL || strstr(sim_cevap, "ERROR") != NULL)
+        {
+            sim_durum = SIM800C_IDLE;
+            sim800c_logf("TCP: Gonderim HATASI!");
+            return -1;
+        }
+        vTaskDelay(pdMS_TO_TICKS(10));
+        gecen_sure += 10;
+    }
+
+    sim_durum = SIM800C_IDLE;
+    sim800c_logf("TCP: Gonderim Zaman Asimi!");
+    return -1;
+}
+
+int sim800c_tcp_recv(uint8_t *out_buf, int max_size, uint32_t timeout_ms)
+{
+    size_t okunan = 0;
+
+    // Stream buffer henüz oluşturulmadıysa hata dön
+    if (sim_tcp_sb == NULL)
+    {
+        return -1;
+    }
+
+    // URC tablomuzun arka planda sim_tcp_sb içine doldurduğu verileri 
+    // doğrudan buradan MQTT veya main katmanı için çekiyoruz.
+    okunan = xStreamBufferReceive(  sim_tcp_sb, 
+                                    out_buf, 
+                                    (size_t)max_size, 
+                                    pdMS_TO_TICKS(timeout_ms));
+
+    // Kaç byte okuduğunu döndürür (0 dönerse timeout olmuştur)
+    return (int)okunan; 
+}
+
+int sim800c_tcp_close(void)
+{
+    // Senin AT_CIPCLOSE makronu doğrudan kullanıyoruz
+    if (sim800c_cmd_wait(AT_CIPCLOSE, "CLOSE OK", BEKLE_5_SN) == 0)
+    {
+        sim800c_logf("TCP Baglantisi Kapatildi.");
+        return 0;
+    }
+    return -1;
+}
+
+sim_tcp_durum_t sim800c_get_tcp_state(void)
+{
+    return sim_tcp_durum;
 }
