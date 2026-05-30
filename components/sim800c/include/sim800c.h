@@ -5,19 +5,21 @@
 #include <stddef.h>
 #include "config.h"
 
+#define DEBUG_PAKET_CIKTISI        (0U)
+
 #define SIM800C_VERI_VAR           (1U)
 #define SIM800C_HEDEF_BAUD_RATE    (115200U)
 #define SIM800C_DEFAULT_BAUD_RATE  (9600U)
 
-/* ──────────────── IO Arayüzü (Dependency Injection) ────────────────
-* main.c bu struct'ı doldurup sim800c_init()'e verir.
-* ----------------------------------------------------------------- */
+/* ──────────────── IO Arayüzü (Dependency Injection) ──────────────── */
+/* main.c bu struct'ı doldurup sim800c_init()'e verir.*/
+/* ----------------------------------------------------------------- */
 typedef struct {
     void (*send)    (const uint8_t  *data , size_t len                     );
     int  (*read)    (      uint8_t  *buf  , size_t len, uint32_t timeout_ms);
     void (*log )    (const char     *msg                                   );
     void (*set_baud)(      uint32_t  baud                                  );
-    void (*flush)   (      void                                            );
+    void (*flush)    (      void                                            );
 } sim800c_io_t;
 
 /* ─────────────────── State Machine Durumları ───────────────────── */

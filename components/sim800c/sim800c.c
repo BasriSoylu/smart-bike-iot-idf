@@ -303,7 +303,7 @@ static void sim800c_process_line(const char *line)
         return;
     }
 
-    /* ─────────── 1. URC Tablosunu Kontrol Et (Yeni Fihrist Sistemi) ─────────── */
+    /* ─────────── 1. URC Tablosunu Kontrol Et ─────────── */
     for (int i = 0; i < URC_TABLO_BOYUTU; i++)
     {
         // Gelen satırın içinde tablodaki prefix (kelime) var mı?
@@ -315,8 +315,8 @@ static void sim800c_process_line(const char *line)
             
             // Eğer gelen veri "+RECEIVE," veya "+IPD," gibi binary bir datanın habercisiyse,
             // bunu standart "sim_cevap" buffer'ına YAZMAMAK için fonksiyondan çıkıyoruz.
-            if ( (0 == strcmp(urc_tablosu[i].prefix, "+RECEIVE,")) ||
-                 (0 == strcmp(urc_tablosu[i].prefix, "+IPD,"     )) )
+            if ((0 == strcmp(urc_tablosu[i].prefix, "+RECEIVE," )) ||
+                (0 == strcmp(urc_tablosu[i].prefix, "+IPD,"     ))   )
             {
                 return;
             }
@@ -324,7 +324,7 @@ static void sim800c_process_line(const char *line)
         }
     }
 
-/* ─────────── 2. Mevcut State Machine (Echo ve Yanıt Bekleme) ─────────── */
+    /* ─────────── 2. State Machine (Echo ve Yanıt Bekleme) ─────────── */
     if ( SIM800C_ECHO_BEKLE == sim_durum )
     {
         if ( 0 == strncmp(line, sim_son_komut, strlen(sim_son_komut)) )
@@ -365,15 +365,16 @@ static void sim800c_reader_task(void *arg)
             continue;
         }
 
+#if(DEBUG_PAKET_CIKTISI)
         /* GECICI DEBUG: raw byte log */
-        sim800c_logf("RX: 0x%02X '%c' modu=%d",
-                     byte,
-                     ((byte >= 32) && (byte < 127)) ? (char)byte : '.',
-                     (int)sim_rx_modu);
+        sim800c_logf("RX: 0x%02X '%c' modu=%d"                      ,
+                        byte                                             ,
+                        ((byte >= 32) && (byte < 127)) ? (char)byte : '.',
+                        (int)sim_rx_modu                                  );
+#endif
 
         switch (sim_rx_modu)
         {
-
             /* ─────────── LINE MODU: mevcut davranis ─────────── */
             case SIM_RX_LINE:
             {

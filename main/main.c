@@ -25,13 +25,14 @@ static void sim_send    (const uint8_t *data, size_t len                     );
 static int  sim_read    (      uint8_t *buf , size_t len, uint32_t timeout_ms);
 static void sim_log     (const char    *msg                                  );
 static void sim_set_baud(      uint32_t baud                                 );
-static void sim_flush   (void                                                );
+static void sim_flush    (void                                                );
 
 /* ──────────────────── main fonksiyonlarinin prototipleri ────────────────── */
 static void cevresel_ayarla         ();
 static void cevresel_baslat         ();
 static void yazilim_versiyon_kontrol();
 static void tcp_test                ();
+static void mqtt_test               ();
 
 
 void app_main(void)
@@ -40,11 +41,10 @@ void app_main(void)
 
     cevresel_baslat();
 
-    /* OTA su an kapali - TCP/MQTT calismasi sirasinda her boot'ta
-     * GPRS uzerinden 240KB indirme zaman kaybi. Test bitince acilacak. */
-    /* yazilim_versiyon_kontrol(); */
+    //yazilim_versiyon_kontrol();
 
-    tcp_test();
+    //tcp_test();
+    mqtt_test();
 
     ESP_LOGI(TAG, "Firmware v%s basliyor...", YAZILIM_VERSIYON);
 
@@ -106,6 +106,34 @@ static void cevresel_baslat()
     }
 }
 
+static void yazilim_versiyon_kontrol()
+{
+    ota_firmware_bilgi_t firmware_bilgi_st;
+    ota_sonuc_t          ota_sonuc        ;
+    
+    ota_sonuc = ota_kontrol(&firmware_bilgi_st);
+    
+    switch ( ota_sonuc )
+    {
+        case OTA_OK:
+        ESP_LOGI(TAG, "Yeni firmware bulundu, guncellemeye baslaniyor...");
+        ota_sonuc = ota_guncelle(&firmware_bilgi_st);
+        if ( OTA_OK != ota_sonuc )
+        {
+            ESP_LOGE(TAG, "OTA guncelleme basarisiz, kod=%d", ota_sonuc);
+        }
+        break;
+        
+        case OTA_GUNCEL:
+        ESP_LOGI(TAG, "Firmware zaten guncel, devam ediliyor.");
+        break;
+        
+        default:
+        ESP_LOGE(TAG, "OTA kontrol hatasi, kod=%d", ota_sonuc);
+        break;
+    }
+}
+
 static void tcp_test()
 {
     ESP_LOGI(TAG, "===== TCP RAW HTTP TESTI =====");
@@ -147,32 +175,78 @@ static void tcp_test()
     ESP_LOGI(TAG, "===== TCP TESTI BITTI =====");
 }
 
-static void yazilim_versiyon_kontrol()
+static void mqtt_test()
 {
-    ota_firmware_bilgi_t firmware_bilgi_st;
-    ota_sonuc_t          ota_sonuc        ;
+    ESP_LOGI(TAG, "===== MQTT TESTI =====");
 
-    ota_sonuc = ota_kontrol(&firmware_bilgi_st);
-
-    switch ( ota_sonuc )
+    /* 1. TCP baglan */
+    if ( 0 !=  sim800c_tcp_open("broker.hivemq.com", 80) )
     {
-        case OTA_OK:
-            ESP_LOGI(TAG, "Yeni firmware bulundu, guncellemeye baslaniyor...");
-            ota_sonuc = ota_guncelle(&firmware_bilgi_st);
-            if ( OTA_OK != ota_sonuc )
-            {
-                ESP_LOGE(TAG, "OTA guncelleme basarisiz, kod=%d", ota_sonuc);
-            }
-        break;
-
-        case OTA_GUNCEL:
-            ESP_LOGI(TAG, "Firmware zaten guncel, devam ediliyor.");
-        break;
-
-        default:
-            ESP_LOGE(TAG, "OTA kontrol hatasi, kod=%d", ota_sonuc);
-        break;
+        ESP_LOGE(TAG, "TCP open basarisiz");
+        return;
     }
+    ESP_LOGI(TAG, "TCP OK, CONNECT gonderiliyor...");
+
+    /* 2. MQTT CONNECT paketi */
+    static const uint8_t mqtt_connect[] = {
+        0x10 ,
+        0x16 ,
+        0x00 , 
+        0x04 , 
+        'M'  , 
+        'Q'  , 
+        'T'  , 
+        'T'  ,
+        0x04 ,
+        0x02 ,
+        0x00, 
+        0x3C,
+        0x00, 
+        0x0A,
+        'e' ,
+        's' ,
+        'p' ,
+        '3' ,
+        '2' ,
+        '_' ,
+        'b' ,
+        'o' ,
+        'l' ,
+        'd'
+    };
+
+    if ( 0 != sim800c_tcp_send(mqtt_connect, sizeof(mqtt_connect)) )
+    {
+        ESP_LOGE(TAG, "CONNECT gonderilemedi");
+        sim800c_tcp_close();
+        return;
+    }
+
+    /* 3. CONNACK bekle - 4 byte: 0x20 0x02 0x00 0x00 */
+    uint8_t connack[4];
+    int n = sim800c_tcp_recv(connack, sizeof(connack), 5000);
+
+    if ( n < 4 )
+    {
+        ESP_LOGE(TAG, "CONNACK gelmedi (n=%d)", n);
+        sim800c_tcp_close();
+        return;
+    }
+
+    ESP_LOGI(TAG, "CONNACK: %02X %02X %02X %02X",
+             connack[0], connack[1], connack[2], connack[3]);
+
+    if ( (0x20 == connack[0]) && (0x00 == connack[3]) )
+    {
+        ESP_LOGI(TAG, ">>> MQTT BROKER BAGLANTISI BASARILI <<<");
+    }
+    else
+    {
+        ESP_LOGE(TAG, "CONNACK ret kodu: 0x%02X", connack[3]);
+    }
+
+    sim800c_tcp_close();
+    ESP_LOGI(TAG, "===== MQTT TESTI BITTI =====");
 }
 
 /* ─────────────── sim800c_io_t wrapper fonksiyonlari ─────────────── */

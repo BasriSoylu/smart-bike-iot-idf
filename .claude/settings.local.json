@@ -2,7 +2,11 @@
   "permissions": {
     "allow": [
       "Bash(git add *)",
-      "Bash(git commit -m ' *)"
+      "Bash(git commit -m ' *)",
+      "Bash(git --version)",
+      "Bash(brew --version)",
+      "Bash(cmake --version)",
+      "Bash(xcode-select -p)"
     ]
   }
 }

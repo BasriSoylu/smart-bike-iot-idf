@@ -120,8 +120,7 @@ ota_sonuc_t ota_guncelle(const ota_firmware_bilgi_t *p_bilgi_st)
         return OTA_HATA_HTTP;
     }
 
-    ESP_LOGI(TAG, "HTTP acildi, sunucu boyutu: %d byte (JSON: %lu)",
-    toplam_boyut, p_bilgi_st->boyut);
+    ESP_LOGI(TAG, "HTTP acildi, sunucu boyutu: %d byte (JSON: %lu)", toplam_boyut, p_bilgi_st->boyut);
 
     if ( (int)p_bilgi_st->boyut != toplam_boyut )
     {
