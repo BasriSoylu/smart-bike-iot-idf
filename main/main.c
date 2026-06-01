@@ -25,7 +25,7 @@ static void sim_send    (const uint8_t *data, size_t len                     );
 static int  sim_read    (      uint8_t *buf , size_t len, uint32_t timeout_ms);
 static void sim_log     (const char    *msg                                  );
 static void sim_set_baud(      uint32_t baud                                 );
-static void sim_flush    (void                                                );
+static void sim_flush   (void                                                );
 
 /* ──────────────────── main fonksiyonlarinin prototipleri ────────────────── */
 static void cevresel_ayarla         ();
@@ -48,7 +48,7 @@ void app_main(void)
 
     ESP_LOGI(TAG, "Firmware v%s basliyor...", YAZILIM_VERSIYON);
 
-    while ( 1 )
+    while(true)
     {
         vTaskDelay(pdMS_TO_TICKS(1000));
         ESP_LOGI(TAG, "Calisiyorum... v%s", YAZILIM_VERSIYON);
@@ -180,7 +180,7 @@ static void mqtt_test()
     ESP_LOGI(TAG, "===== MQTT TESTI =====");
 
     /* 1. TCP baglan */
-    if ( 0 !=  sim800c_tcp_open("broker.hivemq.com", 80) )
+    if ( 0 !=  sim800c_tcp_open("broker.hivemq.com", 1883) )
     {
         ESP_LOGE(TAG, "TCP open basarisiz");
         return;
@@ -189,30 +189,11 @@ static void mqtt_test()
 
     /* 2. MQTT CONNECT paketi */
     static const uint8_t mqtt_connect[] = {
-        0x10 ,
-        0x16 ,
-        0x00 , 
-        0x04 , 
-        'M'  , 
-        'Q'  , 
-        'T'  , 
-        'T'  ,
-        0x04 ,
-        0x02 ,
-        0x00, 
-        0x3C,
-        0x00, 
-        0x0A,
-        'e' ,
-        's' ,
-        'p' ,
-        '3' ,
-        '2' ,
-        '_' ,
-        'b' ,
-        'o' ,
-        'l' ,
-        'd'
+        0x10, 0x16, 0x00, 0x04, 
+        'M' , 'Q' , 'T' , 'T' ,
+        0x04, 0x02, 0x00, 0x3C,
+        0x00, 0x0A,
+        'e', 's', 'p', '3', '2', '_', 'b', 'o', 'l', 'd'
     };
 
     if ( 0 != sim800c_tcp_send(mqtt_connect, sizeof(mqtt_connect)) )
@@ -223,8 +204,8 @@ static void mqtt_test()
     }
 
     /* 3. CONNACK bekle - 4 byte: 0x20 0x02 0x00 0x00 */
-    uint8_t connack[4];
-    int n = sim800c_tcp_recv(connack, sizeof(connack), 5000);
+    uint8_t connack[128];
+    int n = sim800c_tcp_recv(connack, sizeof(connack), 15000);
 
     if ( n < 4 )
     {
@@ -233,8 +214,8 @@ static void mqtt_test()
         return;
     }
 
-    ESP_LOGI(TAG, "CONNACK: %02X %02X %02X %02X",
-             connack[0], connack[1], connack[2], connack[3]);
+    ESP_LOGI(TAG, "RX %d byte: %.*s", n, n, (char*)connack);
+    ESP_LOGI(TAG, "CONNACK: %02X %02X %02X %02X", connack[0], connack[1], connack[2], connack[3]);
 
     if ( (0x20 == connack[0]) && (0x00 == connack[3]) )
     {

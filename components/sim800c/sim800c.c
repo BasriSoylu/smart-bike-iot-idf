@@ -21,50 +21,52 @@ typedef enum
 * Modül dışından erişilemez, sadece bu .c içinde kullanılır.
 * STM32'de global değişkeni static yapmak gibi düşün.
 * -------------------------------------------------------------- */
-static sim800c_io_t            *sim_arayuz         = NULL                        ;   // inject edilen uart arayüzü
-static volatile sim800c_state_t sim_durum          = SIM800C_IDLE                ;   // mevcut state (volatile: iki task aynı anda okur/yazar)
-static char                     sim_cevap[4096]                                  ;   // gelen tüm satırlar (her komut öncesi sıfırlanır)
-static char                     sim_son_komut[128]                               ;   // gönderilen son komut (echo karşılaştırması için)
-static portMUX_TYPE             sim_mux            = portMUX_INITIALIZER_UNLOCKED;   // critical section kilidi (dual-core koruması)
+static          sim800c_io_t         *sim_arayuz         = NULL                        ;   // inject edilen uart arayüzü
+static volatile sim800c_state_t       sim_durum          = SIM800C_IDLE                ;   // mevcut state (volatile: iki task aynı anda okur/yazar)
+static          char                  sim_cevap[4096]    = {0}                         ;   // gelen tüm satırlar (her komut öncesi sıfırlanır)
+static          char                  sim_son_komut[128] = {0}                         ;   // gönderilen son komut (echo karşılaştırması için)
+static          portMUX_TYPE          sim_mux            = portMUX_INITIALIZER_UNLOCKED;   // critical section kilidi (dual-core koruması)
 
-static volatile sim_rx_modu_t        sim_rx_modu   = SIM_RX_LINE      ;   // reader_task mod
-static volatile uint32_t             sim_rx_kalan  = 0                ;   // binary modda kalan byte
-static          StreamBufferHandle_t sim_http_sb   = NULL             ;   // HTTP binary stream
-static          StreamBufferHandle_t sim_tcp_sb    = NULL             ;   // TCP  binary stream
-static volatile sim_tcp_durum_t      sim_tcp_durum = TCP_DISCONNECTED ;
+static volatile sim_rx_modu_t         sim_rx_modu        = SIM_RX_LINE                 ;   // reader_task mod
+static volatile uint32_t              sim_rx_kalan       = 0                           ;   // binary modda kalan byte
+static          StreamBufferHandle_t  sim_http_sb        = NULL                        ;   // HTTP binary stream
+static          StreamBufferHandle_t  sim_tcp_sb         = NULL                        ;   // TCP  binary stream
+static volatile sim_tcp_durum_t       sim_tcp_durum      = TCP_DISCONNECTED            ;
 
 /* ──────────────────── Static Fonksiyonlar ─────────────────────── */
-static void sim800c_reader_task(void *arg);
-static void sim800c_logf(const char *fmt, ...);
-static void sim800c_process_line(const char *line);
-static int  sim800c_http_open_adimlari(const char *url, int *total_len);
-static int  sim800c_http_read_adimlari(int offset, uint8_t *out_buf, int size, int *out_len);
-static void urc_httpread_isle(const char *line);
-static void urc_receive_isle(const char *line);
-static void urc_ipd_isle           (const char *line);
-static void urc_connect_ok_isle    (const char *line);
-static void urc_connect_fail_isle  (const char *line);
-static void urc_already_conn_isle  (const char *line);
-static void urc_closed_isle        (const char *line);
+static void sim800c_reader_task        (      void *arg                                                );
+static void sim800c_logf               (const char *fmt   , ...                                        );
+static void sim800c_process_line       (const char *line                                               );
+static int  sim800c_http_open_adimlari (const char *url   , int     *total_len                         );
+static int  sim800c_http_read_adimlari (      int   offset, uint8_t *out_buf   , int size, int *out_len);
+static void urc_httpread_isle          (const char *line                                               );
+static void urc_receive_isle           (const char *line                                               );
+static void urc_ipd_isle               (const char *line                                               );
+static void urc_connect_ok_isle        (const char *line                                               );
+static void urc_connect_fail_isle      (const char *line                                               );
+static void urc_already_conn_isle      (const char *line                                               );
+static void urc_closed_isle            (const char *line                                               );
 
 
 /* ──────────────────── URC Tablo Yapilari ─────────────────────── */
 typedef void (*urc_isleyici_t)(const char *line);
 
 typedef struct {
-    const char     *prefix;
-    urc_isleyici_t  fonksiyon;
+    const char     *prefix              ;
+    urc_isleyici_t  fonksiyon           ;
+    bool            binary_takip_ediyor ;  /* true: bu URC sonrası N byte binary gelir, sim_cevap'a yazma */
 } sim800c_urc_satiri_t;
+
 
 /* ──────────────────── URC Fihristimiz (Tablo) ─────────────────── */
 static const sim800c_urc_satiri_t urc_tablosu[] = {
-    { "+HTTPREAD:"     , urc_httpread_isle     },
-    { "+RECEIVE,"      , urc_receive_isle      },
-    { "+IPD,"          , urc_ipd_isle          },
-    { "CONNECT OK"     , urc_connect_ok_isle   },
-    { "CONNECT FAIL"   , urc_connect_fail_isle },
-    { "ALREADY CONNECT", urc_already_conn_isle },
-    { "CLOSED"         , urc_closed_isle       },
+    { "+HTTPREAD:"     , urc_httpread_isle    , true  },
+    { "+RECEIVE,"      , urc_receive_isle     , true  },
+    { "+IPD,"          , urc_ipd_isle         , true  },
+    { "CONNECT OK"     , urc_connect_ok_isle  , false },
+    { "CONNECT FAIL"   , urc_connect_fail_isle, false },
+    { "ALREADY CONNECT", urc_already_conn_isle, false },
+    { "CLOSED"         , urc_closed_isle      , false },
 };
 
 #define URC_TABLO_BOYUTU (sizeof(urc_tablosu) / sizeof(urc_tablosu[0]))
@@ -212,7 +214,7 @@ void sim800c_send_command(const char *cmd)
 
     if(idle_mi)
     {
-        sim_arayuz->send( (const uint8_t *)buf, strlen(buf) );
+        sim_arayuz->send( (const uint8_t *)buf, strlen(buf) ) ;
         sim800c_logf("Komut gonderildi: %s", cmd);
     }
     else
@@ -313,10 +315,9 @@ static void sim800c_process_line(const char *line)
             urc_tablosu[i].fonksiyon(line);
             urc_yakalandi = true;
             
-            // Eğer gelen veri "+RECEIVE," veya "+IPD," gibi binary bir datanın habercisiyse,
-            // bunu standart "sim_cevap" buffer'ına YAZMAMAK için fonksiyondan çıkıyoruz.
-            if ((0 == strcmp(urc_tablosu[i].prefix, "+RECEIVE," )) ||
-                (0 == strcmp(urc_tablosu[i].prefix, "+IPD,"     ))   )
+            // Eger URC binary takip eden bir habercii ise (+IPD, +RECEIVE, +HTTPREAD)
+            // sim_cevap'a yazmamak icin fonksiyondan cikiyoruz.
+            if ( true == urc_tablosu[i].binary_takip_ediyor )
             {
                 return;
             }
@@ -401,6 +402,15 @@ static void sim800c_reader_task(void *arg)
                     line_buf[1] = '\0';
                     sim800c_process_line(line_buf);
                     /* line_pos zaten 0 */
+                }
+                else if( (':' == byte) && (0 == strncmp(line_buf, "+IPD,", 5)) )
+                {
+                    /* SIM800 +IPD,N: URC'si \r\n ile bitmiyor - ':' sonrasi hemen
+                    * N byte binary geliyor. ':' goruldugunde URC tamamlanmis sayilir,
+                    * urc_ipd_isle sim_rx_modu'yu TCP_BINARY'e cevirir. */
+                    line_buf[line_pos] = '\0';
+                    urc_ipd_isle(line_buf);
+                    line_pos = 0;
                 }
                 else
                 {
