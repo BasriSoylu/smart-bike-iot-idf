@@ -27,12 +27,25 @@ static void sim_log     (const char    *msg                                  );
 static void sim_set_baud(      uint32_t baud                                 );
 static void sim_flush   (void                                                );
 
+
+
 /* ──────────────────── main fonksiyonlarinin prototipleri ────────────────── */
 static void cevresel_ayarla         ();
 static void cevresel_baslat         ();
 static void yazilim_versiyon_kontrol();
 static void tcp_test                ();
 static void mqtt_test               ();
+
+
+/* ──────────────────── Main Struct Yapilari ────────────────── */
+typedef struct
+{
+    uint32_t devices_id_u32 ;
+    float    gps_altitute_f ;
+    float    gps_latitute_f ;
+    float    gps_longitute_f;
+}gps_veri_paketi_t;
+gps_veri_paketi_t gps_veri_paketi_st;
 
 
 void app_main(void)
@@ -219,7 +232,69 @@ static void mqtt_test()
 
     if ( (0x20 == connack[0]) && (0x00 == connack[3]) )
     {
+        /* 6. PUBLISH paketini inşa et */
+        const char *topic = "hbs_smart_bike_2026_xyz123/gps";
+        uint16_t    topic_len   = strlen(topic);
+        uint8_t     publish_pkt[256];
+        uint16_t    pkt_idx     = 0;
+
+        char json_payload[128];
+        int  json_len;
+
+
         ESP_LOGI(TAG, ">>> MQTT BROKER BAGLANTISI BASARILI <<<");
+
+        gps_veri_paketi_st.devices_id_u32  = 42        ;
+        gps_veri_paketi_st.gps_altitute_f  = 120.5f    ;
+        gps_veri_paketi_st.gps_latitute_f  = 41.0082f  ;
+        gps_veri_paketi_st.gps_longitute_f = 28.9784f  ;
+
+        while(true)
+        {
+            gps_veri_paketi_st.gps_latitute_f  += 0.0001f;
+            gps_veri_paketi_st.gps_longitute_f += 0.0001f;
+            gps_veri_paketi_st.gps_altitute_f  += 0.5f;
+            pkt_idx = 0;   
+
+            json_len = snprintf(json_payload, sizeof(json_payload), "{\"Cihaz_ID\":%u,\"Yukseklik\":%.2f,\"Enlem\":%.6f,\"Boylam\":%.6f}" ,   
+                                                                    (unsigned)  gps_veri_paketi_st.devices_id_u32                         ,
+                                                                                gps_veri_paketi_st.gps_altitute_f                         ,
+                                                                                gps_veri_paketi_st.gps_latitute_f                         ,
+                                                                                gps_veri_paketi_st.gps_longitute_f                         );
+
+            ESP_LOGI(TAG, "JSON (%d byte): %s", json_len, json_payload);
+            
+            /* Fixed header */
+            publish_pkt[pkt_idx++] = 0x30;                          /* PUBLISH, QoS=0, DUP=0, RETAIN=0 */
+            publish_pkt[pkt_idx++] = (uint8_t)(2 + topic_len + json_len);  /* remaining_length */
+
+            /* Variable header: topic length (big-endian / network byte order) */
+            publish_pkt[pkt_idx++] = (uint8_t)(topic_len >> 8);     /* MSB */
+            publish_pkt[pkt_idx++] = (uint8_t)(topic_len & 0xFF);   /* LSB */
+
+            /* Variable header: topic string */
+            memcpy(&publish_pkt[pkt_idx], topic, topic_len);
+            pkt_idx += topic_len;
+
+            /* Payload: JSON */
+            memcpy(&publish_pkt[pkt_idx], json_payload, json_len);
+            pkt_idx += json_len;
+
+            ESP_LOGI(TAG, "PUBLISH paketi inşa edildi: %u byte", pkt_idx);
+
+            /* 7. PUBLISH paketini broker'a yolla */
+            if ( 0 != sim800c_tcp_send(publish_pkt, pkt_idx) )
+            {
+                ESP_LOGE(TAG, "PUBLISH gonderilemedi");
+                sim800c_tcp_close();
+                return;
+            }
+            ESP_LOGI(TAG, ">>> PUBLISH gonderildi (%u byte) <<<", pkt_idx);
+
+            /* 8. Broker'in mesaji isleyecegi minimum süre */
+            vTaskDelay(pdMS_TO_TICKS(5000));
+        }
+        
     }
     else
     {

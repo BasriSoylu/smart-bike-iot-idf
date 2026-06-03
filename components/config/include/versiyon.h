@@ -5,12 +5,28 @@
  *================================================================*/
 #define YAZILIM_VERSIYON_MAJOR  1
 #define YAZILIM_VERSIYON_MINOR  5
-#define YAZILIM_VERSIYON_PATCH  5
-#define YAZILIM_VERSIYON        "1.5.5"
+#define YAZILIM_VERSIYON_PATCH  6
+#define YAZILIM_VERSIYON        "1.5.6"
 
 /*================================================================
  * VERSIYON GECMISI - en yeni ustte
  *================================================================*/
+
+
+/*******************************************************************
+ * Versiyon       : v1.5.6
+ * Branch         : main
+ * Kullanilan SDK : ESP-IDF v5.5
+ * Kullanilan IDE : Visual Studio Code
+ *=================================================================
+* Yazar           : Hasan Basri SOYLU
+* Tarih           : 04.06.2026
+*==================================================================
+* Aciklama        : sim800c +IPD parser fix; struct->JSON->MQTT
+*                   PUBLISH end-to-end calisir (5sn periyodik akis,
+*                   HiveMQ Web Client'tan dogrulandi). URC tablosuna
+*                   binary_takip_ediyor bool alani eklendi.
+*******************************************************************/
 
 
 /*******************************************************************
