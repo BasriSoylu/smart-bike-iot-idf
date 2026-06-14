@@ -14,6 +14,21 @@
 
 
 /*******************************************************************
+ * Versiyon       : v1.5.7
+ * Branch         : main
+ * Kullanilan SDK : ESP-IDF v5.5
+ * Kullanilan IDE : Visual Studio Code
+ *=================================================================
+* Yazar           : Hasan Basri SOYLU
+* Tarih           : 15.06.2026
+*==================================================================
+* Aciklama        : MQTT Test kismindan tamamen bir sub-modul
+*                   olarak yazildi.
+*                   SUBSCRIBE tarafi yazilmaya devam edecektir.
+*******************************************************************/
+
+
+/*******************************************************************
  * Versiyon       : v1.5.6
  * Branch         : main
  * Kullanilan SDK : ESP-IDF v5.5

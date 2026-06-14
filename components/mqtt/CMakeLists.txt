@@ -1,5 +1,5 @@
 idf_component_register(
-    SRCS "src/uart.c"
+    SRCS "src/mqtt.c"
     INCLUDE_DIRS "include"
-    REQUIRES "driver"
+    REQUIRES freertos log
 )

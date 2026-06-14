@@ -7,6 +7,7 @@
 #include "sim800c.h"
 #include "ota.h"
 #include "versiyon.h"
+#include "mqtt.h"
 
 static const char *TAG = "MAIN";
 
@@ -20,14 +21,19 @@ static const char *TAG = "MAIN";
 
 static uart_handle_t g_sim_uart;
 
-/* ────────── sim800c_io_t wrapper fonksiyon prototipleri ──────────────────── */
+/* ─────────────── sim800c_io_t wrapper fonksiyon prototipleri ───────────────── */
 static void sim_send    (const uint8_t *data, size_t len                     );
 static int  sim_read    (      uint8_t *buf , size_t len, uint32_t timeout_ms);
 static void sim_log     (const char    *msg                                  );
 static void sim_set_baud(      uint32_t baud                                 );
 static void sim_flush   (void                                                );
 
-
+/* ────────────── mqtt_transport_t wrapper fonksiyon prototipleri ─────────────── */
+static int  mqtt_tcp_open_wrapper (const char    *host, uint16_t port                       );
+static int  mqtt_tcp_close_wrapper(void                                                     );
+static int  mqtt_send_wrapper     (const uint8_t *data, size_t len                          );
+static int  mqtt_recv_wrapper     (      uint8_t *buf , size_t max_len, uint32_t timeout_ms );
+static void mqtt_log_wrapper      (const char    *msg                                       );
 
 /* ──────────────────── main fonksiyonlarinin prototipleri ────────────────── */
 static void cevresel_ayarla         ();
@@ -101,6 +107,16 @@ static void cevresel_ayarla()
         .flush    = sim_flush   ,
     };
     sim800c_init(&fp_sim800c_fonksiyonlar_st);
+
+    static const mqtt_transport_t fp_mqtt_transport_st =
+    {
+        .tcp_open  = mqtt_tcp_open_wrapper ,
+        .tcp_close = mqtt_tcp_close_wrapper,
+        .send      = mqtt_send_wrapper     ,
+        .receive   = mqtt_recv_wrapper     ,
+        .log       = mqtt_log_wrapper      ,
+    };
+    mqtt_init(&fp_mqtt_transport_st);
 }
 
 static void cevresel_baslat()
@@ -190,118 +206,49 @@ static void tcp_test()
 
 static void mqtt_test()
 {
-    ESP_LOGI(TAG, "===== MQTT TESTI =====");
+    char        json_payload[128]                       ;
+    int         json_len                                ;
+    const char *topic = "hbs_smart_bike_2026_xyz123/gps";
 
-    /* 1. TCP baglan */
-    if ( 0 !=  sim800c_tcp_open("broker.hivemq.com", 1883) )
+    ESP_LOGI(TAG, "===== MQTT =====");
+
+    if ( MQTT_OK != mqtt_connect("broker.hivemq.com", 1883, "esp32_bold", 60) )
     {
-        ESP_LOGE(TAG, "TCP open basarisiz");
-        return;
-    }
-    ESP_LOGI(TAG, "TCP OK, CONNECT gonderiliyor...");
-
-    /* 2. MQTT CONNECT paketi */
-    static const uint8_t mqtt_connect[] = {
-        0x10, 0x16, 0x00, 0x04, 
-        'M' , 'Q' , 'T' , 'T' ,
-        0x04, 0x02, 0x00, 0x3C,
-        0x00, 0x0A,
-        'e', 's', 'p', '3', '2', '_', 'b', 'o', 'l', 'd'
-    };
-
-    if ( 0 != sim800c_tcp_send(mqtt_connect, sizeof(mqtt_connect)) )
-    {
-        ESP_LOGE(TAG, "CONNECT gonderilemedi");
-        sim800c_tcp_close();
+        ESP_LOGE(TAG, "MQTT connect basarisiz");
         return;
     }
 
-    /* 3. CONNACK bekle - 4 byte: 0x20 0x02 0x00 0x00 */
-    uint8_t connack[128];
-    int n = sim800c_tcp_recv(connack, sizeof(connack), 15000);
+    gps_veri_paketi_st.devices_id_u32  = 42        ;
+    gps_veri_paketi_st.gps_altitute_f  = 120.5f    ;
+    gps_veri_paketi_st.gps_latitute_f  = 41.0082f  ;
+    gps_veri_paketi_st.gps_longitute_f = 28.9784f  ;
 
-    if ( n < 4 )
+    while ( true )
     {
-        ESP_LOGE(TAG, "CONNACK gelmedi (n=%d)", n);
-        sim800c_tcp_close();
-        return;
-    }
+        gps_veri_paketi_st.gps_latitute_f  += 0.0001f;
+        gps_veri_paketi_st.gps_longitute_f += 0.0001f;
+        gps_veri_paketi_st.gps_altitute_f  += 0.5f   ;
 
-    ESP_LOGI(TAG, "RX %d byte: %.*s", n, n, (char*)connack);
-    ESP_LOGI(TAG, "CONNACK: %02X %02X %02X %02X", connack[0], connack[1], connack[2], connack[3]);
+        json_len = snprintf(json_payload, sizeof(json_payload),
+                            "{\"Cihaz_ID\":%u,\"Yukseklik\":%.2f,\"Enlem\":%.6f,\"Boylam\":%.6f}" ,
+                                            (unsigned)  gps_veri_paketi_st.devices_id_u32 ,
+                                                        gps_veri_paketi_st.gps_altitute_f ,
+                                                        gps_veri_paketi_st.gps_latitute_f ,
+                                                        gps_veri_paketi_st.gps_longitute_f);
 
-    if ( (0x20 == connack[0]) && (0x00 == connack[3]) )
-    {
-        /* 6. PUBLISH paketini inşa et */
-        const char *topic = "hbs_smart_bike_2026_xyz123/gps";
-        uint16_t    topic_len   = strlen(topic);
-        uint8_t     publish_pkt[256];
-        uint16_t    pkt_idx     = 0;
+        ESP_LOGI(TAG, "JSON (%d byte): %s", json_len, json_payload);
 
-        char json_payload[128];
-        int  json_len;
-
-
-        ESP_LOGI(TAG, ">>> MQTT BROKER BAGLANTISI BASARILI <<<");
-
-        gps_veri_paketi_st.devices_id_u32  = 42        ;
-        gps_veri_paketi_st.gps_altitute_f  = 120.5f    ;
-        gps_veri_paketi_st.gps_latitute_f  = 41.0082f  ;
-        gps_veri_paketi_st.gps_longitute_f = 28.9784f  ;
-
-        while(true)
+        if ( MQTT_OK != mqtt_publish(topic, (const uint8_t *)json_payload, (uint16_t)json_len) )
         {
-            gps_veri_paketi_st.gps_latitute_f  += 0.0001f;
-            gps_veri_paketi_st.gps_longitute_f += 0.0001f;
-            gps_veri_paketi_st.gps_altitute_f  += 0.5f;
-            pkt_idx = 0;   
-
-            json_len = snprintf(json_payload, sizeof(json_payload), "{\"Cihaz_ID\":%u,\"Yukseklik\":%.2f,\"Enlem\":%.6f,\"Boylam\":%.6f}" ,   
-                                                                    (unsigned)  gps_veri_paketi_st.devices_id_u32                         ,
-                                                                                gps_veri_paketi_st.gps_altitute_f                         ,
-                                                                                gps_veri_paketi_st.gps_latitute_f                         ,
-                                                                                gps_veri_paketi_st.gps_longitute_f                         );
-
-            ESP_LOGI(TAG, "JSON (%d byte): %s", json_len, json_payload);
-            
-            /* Fixed header */
-            publish_pkt[pkt_idx++] = 0x30;                          /* PUBLISH, QoS=0, DUP=0, RETAIN=0 */
-            publish_pkt[pkt_idx++] = (uint8_t)(2 + topic_len + json_len);  /* remaining_length */
-
-            /* Variable header: topic length (big-endian / network byte order) */
-            publish_pkt[pkt_idx++] = (uint8_t)(topic_len >> 8);     /* MSB */
-            publish_pkt[pkt_idx++] = (uint8_t)(topic_len & 0xFF);   /* LSB */
-
-            /* Variable header: topic string */
-            memcpy(&publish_pkt[pkt_idx], topic, topic_len);
-            pkt_idx += topic_len;
-
-            /* Payload: JSON */
-            memcpy(&publish_pkt[pkt_idx], json_payload, json_len);
-            pkt_idx += json_len;
-
-            ESP_LOGI(TAG, "PUBLISH paketi inşa edildi: %u byte", pkt_idx);
-
-            /* 7. PUBLISH paketini broker'a yolla */
-            if ( 0 != sim800c_tcp_send(publish_pkt, pkt_idx) )
-            {
-                ESP_LOGE(TAG, "PUBLISH gonderilemedi");
-                sim800c_tcp_close();
-                return;
-            }
-            ESP_LOGI(TAG, ">>> PUBLISH gonderildi (%u byte) <<<", pkt_idx);
-
-            /* 8. Broker'in mesaji isleyecegi minimum süre */
-            vTaskDelay(pdMS_TO_TICKS(5000));
+            ESP_LOGE(TAG, "PUBLISH basarisiz, donguden cikiliyor");
+            break;
         }
-        
-    }
-    else
-    {
-        ESP_LOGE(TAG, "CONNACK ret kodu: 0x%02X", connack[3]);
+
+        vTaskDelay(pdMS_TO_TICKS(5000));
     }
 
-    sim800c_tcp_close();
+    mqtt_disconnect();
+
     ESP_LOGI(TAG, "===== MQTT TESTI BITTI =====");
 }
 
@@ -310,7 +257,7 @@ static void sim_send(const uint8_t *data, size_t len)
 {
     uart_gonder(g_sim_uart, data, (int)len);
 }
-static int sim_read(uint8_t *buf, size_t len, uint32_t timeout_ms)
+static int  sim_read(uint8_t *buf, size_t len, uint32_t timeout_ms)
 {
     return uart_oku(g_sim_uart, buf, (int)len, timeout_ms);
 }
@@ -326,3 +273,44 @@ static void sim_flush(void)
 {
     uart_temizle(g_sim_uart);
 }
+
+/* ─────────── mqtt_transport_t wrapper fonksiyonlari ─────────── */
+static int mqtt_tcp_open_wrapper(const char *host, uint16_t port)
+{
+    return sim800c_tcp_open(host, (int)port);
+}
+static int mqtt_tcp_close_wrapper(void)
+{
+    return sim800c_tcp_close();
+}
+static int mqtt_send_wrapper(const uint8_t *data, size_t len)
+{
+    return sim800c_tcp_send(data, (int)len);
+}
+static int mqtt_recv_wrapper(uint8_t *buf, size_t max_len, uint32_t timeout_ms)
+{
+    return sim800c_tcp_recv(buf, (int)max_len, timeout_ms);
+}
+static void mqtt_log_wrapper(const char *msg)
+{
+    ESP_LOGI(TAG, "%s", msg);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
