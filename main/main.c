@@ -41,6 +41,7 @@ static void cevresel_baslat         ();
 static void yazilim_versiyon_kontrol();
 static void tcp_test                ();
 static void mqtt_test               ();
+static void mqtt_message_handler    (const char *p_topic_ch, const uint8_t *p_payload_u8, size_t d_payload_len);
 
 
 /* ──────────────────── Main Struct Yapilari ────────────────── */
@@ -218,6 +219,19 @@ static void mqtt_test()
         return;
     }
 
+    /* ──── Callback + subscribe + receiver baslat ──── */
+    mqtt_set_message_callback(mqtt_message_handler);
+
+    if ( MQTT_OK != mqtt_subscribe("hbs_smart_bike_2026_xyz123/komut", 0) )
+    {
+        ESP_LOGE(TAG, "MQTT subscribe basarisiz");
+        mqtt_disconnect();
+        return;
+    }
+
+    mqtt_start_receiver();
+    /* ─────────────────────────────────────────────── */
+
     gps_veri_paketi_st.devices_id_u32  = 42        ;
     gps_veri_paketi_st.gps_altitute_f  = 120.5f    ;
     gps_veri_paketi_st.gps_latitute_f  = 41.0082f  ;
@@ -235,7 +249,7 @@ static void mqtt_test()
                                                         gps_veri_paketi_st.gps_altitute_f ,
                                                         gps_veri_paketi_st.gps_latitute_f ,
                                                         gps_veri_paketi_st.gps_longitute_f);
-
+        ESP_LOGI(TAG, "══════════════════════════════════════════════════════════════════════════════════════════════");
         ESP_LOGI(TAG, "JSON (%d byte): %s", json_len, json_payload);
 
         if ( MQTT_OK != mqtt_publish(topic, (const uint8_t *)json_payload, (uint16_t)json_len) )
@@ -250,6 +264,20 @@ static void mqtt_test()
     mqtt_disconnect();
 
     ESP_LOGI(TAG, "===== MQTT TESTI BITTI =====");
+}
+
+
+/* ─────────── MQTT mesaj geldiginde tetiklenen handler ─────────── */
+static void mqtt_message_handler(   const   char    *p_topic_ch   ,
+                                    const   uint8_t *p_payload_u8 ,
+                                            size_t   d_payload_len )
+{
+    ESP_LOGI(TAG, "══════════════════════════════════════════════════════════════════════════════════════════════");
+    ESP_LOGI(TAG, ">>> MQTT MESAJ GELDI <<<");
+    ESP_LOGI(TAG, "Topic   : %s"     , p_topic_ch);
+    ESP_LOGI(TAG, "Payload : %.*s"   , (int)d_payload_len, (const char *)p_payload_u8);
+    ESP_LOGI(TAG, "Boyut   : %u byte", (unsigned)d_payload_len);
+    ESP_LOGI(TAG, "══════════════════════════════════════════════════════════════════════════════════════════════\n");
 }
 
 /* ─────────────── sim800c_io_t wrapper fonksiyonlari ─────────────── */

@@ -39,6 +39,7 @@ mqtt_return_t mqtt_connect              (const char              *p_host_ch   , 
 mqtt_return_t mqtt_publish              (const char              *p_topic_ch  , const uint8_t  *p_payload_u8, uint16_t    d_payload_len_u16                                 );
 mqtt_return_t mqtt_subscribe            (const char              *p_topic_ch  ,       uint8_t   d_qos_u8                                                                    );
 mqtt_return_t mqtt_set_message_callback (mqtt_message_callback_t  fp_callback                                                                                               );
+mqtt_return_t mqtt_start_receiver       (void);
 mqtt_return_t mqtt_disconnect           (void);
 
 

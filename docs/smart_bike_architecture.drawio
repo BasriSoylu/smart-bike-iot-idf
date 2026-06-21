@@ -1,6 +1,6 @@
 <mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/26.0.9 Chrome/128.0.6613.186 Electron/32.2.5 Safari/537.36" version="26.0.9">
   <diagram name="Smart Bike IoT - Kod Mimarisi" id="0">
-    <mxGraphModel dx="3187" dy="1876" grid="1" gridSize="5" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="2800" pageHeight="1400" math="0" shadow="0">
+    <mxGraphModel dx="3124" dy="1834" grid="1" gridSize="2" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="2800" pageHeight="1400" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -164,12 +164,11 @@
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="cx6" value="esp_ota_write()" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#b85450;strokeWidth=2;dashed=0;fontStyle=1;fontSize=11;labelBackgroundColor=#ffffff;labelBorderColor=#b85450;exitX=1;exitY=0.6;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="ota_main" target="flash_body" edge="1">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="1620" y="548" />
-              <mxPoint x="1620" y="553" />
-            </Array>
+        <mxCell id="cx6" value="esp_ota_write()" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#b85450;strokeWidth=2;dashed=0;fontStyle=1;fontSize=11;labelBackgroundColor=#ffffff;labelBorderColor=#b85450;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=0.999;exitY=0.614;exitDx=0;exitDy=0;exitPerimeter=0;" parent="1" source="ota_main" target="flash_body" edge="1">
+          <mxGeometry x="0.0923" y="11" relative="1" as="geometry">
+            <Array as="points" />
+            <mxPoint x="1570" y="560" as="sourcePoint" />
+            <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
         <mxCell id="cx7" value="HTTP GET over GPRS" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#b85450;strokeWidth=2;dashed=0;fontStyle=1;fontSize=11;labelBackgroundColor=#ffffff;labelBorderColor=#b85450;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=1.001;exitY=0.33;exitDx=0;exitDy=0;exitPerimeter=0;" parent="1" source="gsm_json" target="srv_body" edge="1">

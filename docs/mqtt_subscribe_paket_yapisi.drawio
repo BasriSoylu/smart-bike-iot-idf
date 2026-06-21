@@ -1,0 +1,172 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/26.0.9 Chrome/128.0.6613.186 Electron/32.2.5 Safari/537.36" version="26.0.9">
+  <diagram id="mqtt_subscribe" name="MQTT SUBSCRIBE Paket Yapısı">
+    <mxGraphModel dx="880" dy="795" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="1700" pageHeight="2400" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="&lt;font style=&quot;font-size: 40px;&quot;&gt;&lt;b style=&quot;&quot;&gt;MQTT 3.1.1 SUBSCRIBE Paket Yapısı&lt;/b&gt; — Byte ve Bit Düzeyinde Analiz&lt;/font&gt;" style="text;html=1;align=center;fontColor=#111;fontSize=22;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="4" width="1500" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="subtitle" value="&lt;font style=&quot;font-size: 30px;&quot;&gt;Topic: hbs_smart_bike_2026_xyz123/komut (32 byte), QoS=0, Packet ID=1&lt;/font&gt;" style="text;html=1;align=center;fontColor=#555;fontSize=14;" parent="1" vertex="1">
+          <mxGeometry x="23" y="46" width="1500" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="section1" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;dashed=1;dashPattern=8 4;strokeWidth=2;arcSize=9;" parent="1" vertex="1">
+          <mxGeometry x="50" y="100" width="1402" height="320" as="geometry" />
+        </mxCell>
+        <mxCell id="section1_title" value="&lt;b&gt;1. FIXED HEADER&lt;/b&gt; — Her MQTT paketinde var" style="text;html=1;align=left;fontColor=#b85450;fontSize=16;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="70" y="110" width="500" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="byte0_box" value="&lt;b&gt;Byte 0&lt;/b&gt;&lt;br&gt;&lt;font size=&quot;5&quot;&gt;0x82&lt;/font&gt;&lt;br&gt;Control Byte" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="80" y="150" width="140" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="byte0_bits" value="&lt;b&gt;Bit Düzeyi: 0x82 = 1000 0010&lt;/b&gt;" style="text;html=1;align=left;fontColor=#111;fontSize=14;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="250" y="150" width="400" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="bit_table_header" value="&lt;font style=&quot;font-size: 11px;&quot;&gt;&lt;b&gt;&lt;u&gt;Bit 7|Bit 6|Bit 5|Bit 4|Bit 3|Bit 2|Bit 1|Bit 0&lt;/u&gt;&lt;/b&gt;&lt;/font&gt;" style="text;html=1;align=center;fontColor=#666;fontSize=10;fontFamily=Courier New;" parent="1" vertex="1">
+          <mxGeometry x="250" y="180" width="320" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="bit_7" value="&lt;b&gt;1&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=16;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="250" y="200" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="bit_6" value="&lt;b&gt;0&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=16;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="290" y="200" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="bit_5" value="&lt;b&gt;0&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=16;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="330" y="200" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="bit_4" value="&lt;b&gt;0&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=16;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="370" y="200" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="bit_3" value="&lt;b&gt;0&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=16;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="410" y="200" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="bit_2" value="&lt;b&gt;0&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=16;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="450" y="200" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="bit_1" value="&lt;b&gt;1&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=16;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="490" y="200" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="bit_0" value="&lt;b&gt;0&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=16;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="530" y="200" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="upper_label" value="Üst 4 bit = 0x8 → Paket Tipi: SUBSCRIBE" style="text;html=1;align=left;fontColor=#82b366;fontSize=12;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="250" y="240" width="320" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="lower_label" value="Alt 4 bit = 0x2 (0010) → Reserved (MQTT spec ZORUNLU)" style="text;html=1;align=left;fontColor=#d79b00;fontSize=12;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="250" y="260" width="400" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="alt_control" value="&lt;b&gt;&lt;font style=&quot;font-size: 13px;&quot;&gt;Alternatif Control Byte değerleri (Paket Tipleri)&lt;/font&gt;&lt;/b&gt;&lt;hr&gt;&lt;font style=&quot;font-size: 13px;&quot;&gt;0x10 = CONNECT&lt;br&gt;0x20 = CONNACK&lt;br&gt;&lt;b style=&quot;&quot;&gt;0x30-0x3F = PUBLISH&lt;/b&gt; (alt 4 bit: DUP/QoS/RETAIN)&lt;br&gt;0x40 = PUBACK&lt;br&gt;0x50/0x62/0x70 = PUBREC/PUBREL/PUBCOMP&lt;br&gt;&lt;b style=&quot;&quot;&gt;0x82 = SUBSCRIBE&lt;/b&gt;&lt;br&gt;0x90 = SUBACK&lt;br&gt;0xA2 = UNSUBSCRIBE&lt;br&gt;0xB0 = UNSUBACK&lt;br&gt;0xC0 = PINGREQ&lt;br&gt;0xD0 = PINGRESP&lt;br&gt;0xE0 = DISCONNECT&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;align=left;verticalAlign=top;spacingLeft=10;spacingTop=10;arcSize=10;" parent="1" vertex="1">
+          <mxGeometry x="673" y="111.25" width="319" height="297.75" as="geometry" />
+        </mxCell>
+        <mxCell id="why_0010" value="&lt;b&gt;Neden 0010 zorunlu?&lt;/b&gt;&lt;hr&gt;MQTT 3.1.1 spec&#39;inde SUBSCRIBE, UNSUBSCRIBE ve PUBREL paketlerinin alt 4 bit&#39;i MUTLAKA &lt;b&gt;0010&lt;/b&gt; olmalı.&lt;br&gt;&lt;br&gt;Farklı yollarsan broker bağlantıyı &lt;b&gt;direkt koparır&lt;/b&gt; (protocol violation).&lt;br&gt;&lt;br&gt;Diğer paketlerde (PUBLISH gibi) alt 4 bit DUP/QoS/RETAIN flag&#39;leri için kullanılır." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;align=left;verticalAlign=top;spacingLeft=10;spacingTop=10;arcSize=10;" parent="1" vertex="1">
+          <mxGeometry x="1014" y="274.5" width="421" height="134.5" as="geometry" />
+        </mxCell>
+        <mxCell id="byte1_box" value="&lt;b&gt;Byte 1&lt;/b&gt;&lt;br&gt;&lt;font size=&quot;5&quot;&gt;0x25&lt;/font&gt;&lt;br&gt;Remaining Length" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="80" y="295" width="140" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="byte1_explain" value="&lt;b&gt;Remaining Length nedir?&lt;/b&gt;&lt;hr&gt;Fixed header&#39;dan SONRA gelen tüm byte&#39;ların TOPLAM uzunluğu.&lt;br&gt;&lt;br&gt;&lt;b&gt;Bizim hesap:&lt;/b&gt;&lt;br&gt;packet_id (2) + topic_len_field (2) + topic_string (32) + qos (1) = &lt;b&gt;37 byte = 0x25&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;align=left;verticalAlign=top;spacingLeft=10;spacingTop=10;" parent="1" vertex="1">
+          <mxGeometry x="250" y="295" width="418" height="105" as="geometry" />
+        </mxCell>
+        <mxCell id="vle_explain" value="&lt;b&gt;VLE (Variable Length Encoding) Alternatifleri&lt;/b&gt;&lt;hr&gt;1 byte:  0-127 byte paket (bizim durumda ✓)&lt;br&gt;2 byte:  128-16,383&lt;br&gt;3 byte:  16,384-2,097,151&lt;br&gt;4 byte:  2,097,152-268,435,455&lt;br&gt;&lt;br&gt;&lt;b&gt;Kural:&lt;/b&gt; Her byte&#39;ın MSB&#39;si &#39;1&#39; ise &quot;sonraki byte da var&quot;, &#39;0&#39; ise &quot;bu son&quot;.&lt;br&gt;&lt;br&gt;0x25 = 0010 0101 (MSB=0 → tek byte, 37 değeri)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;align=left;verticalAlign=top;spacingLeft=10;spacingTop=10;arcSize=9;" parent="1" vertex="1">
+          <mxGeometry x="1014" y="111.25" width="421" height="157.5" as="geometry" />
+        </mxCell>
+        <mxCell id="section2" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;dashed=1;dashPattern=8 4;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="50" y="450" width="1396" height="270" as="geometry" />
+        </mxCell>
+        <mxCell id="section2_title" value="&lt;b&gt;2. VARIABLE HEADER&lt;/b&gt; — Packet ID (cevap eşleştirme için)" style="text;html=1;align=left;fontColor=#6c8ebf;fontSize=16;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="70" y="460" width="600" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="byte2_box" value="&lt;b&gt;Byte 2&lt;/b&gt;&lt;br&gt;&lt;font size=&quot;5&quot;&gt;0x00&lt;/font&gt;&lt;br&gt;Packet ID MSB" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="80" y="500" width="140" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="byte3_box" value="&lt;b&gt;Byte 3&lt;/b&gt;&lt;br&gt;&lt;font size=&quot;5&quot;&gt;0x01&lt;/font&gt;&lt;br&gt;Packet ID LSB" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="286" y="500" width="140" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="packet_id_explain" value="&lt;b&gt;Packet ID Nedir?&lt;/b&gt;&lt;hr&gt;2 byte (big-endian) — bizim verdiğimiz 1-65535 arası kimlik.&lt;br&gt;&lt;br&gt;&lt;b&gt;Bizim örnek:&lt;/b&gt; 0x0001 (1)&lt;br&gt;&lt;br&gt;Broker SUBACK döndüğünde &lt;b&gt;AYNI ID&#39;yi&lt;/b&gt; geri yollar. Biz hangi SUBSCRIBE&#39;a cevap olduğunu ID ile anlarız.&lt;br&gt;&lt;br&gt;Birden fazla subscribe peş peşe yollarsak (id=1, id=2, id=3) cevaplar karışık sırada gelebilir." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;align=left;verticalAlign=top;spacingLeft=10;spacingTop=10;arcSize=11;" parent="1" vertex="1">
+          <mxGeometry x="501" y="500" width="350" height="207" as="geometry" />
+        </mxCell>
+        <mxCell id="packet_id_alts" value="&lt;b&gt;Alternatifler / Kurallar&lt;/b&gt;&lt;hr&gt;&lt;b&gt;0x0000 (0) → YASAK!&lt;/b&gt;&lt;br&gt;MQTT spec gereği — broker reddeder.&lt;br&gt;&lt;br&gt;&lt;b&gt;0x0001 - 0xFFFF&lt;/b&gt; → kullanılabilir&lt;br&gt;&lt;br&gt;&lt;b&gt;Pratik yöntem:&lt;/b&gt;&lt;br&gt;static counter, her subscribe&#39;da artar.&lt;br&gt;65535&#39;ten sonra 1&#39;e döner (0 yasak).&lt;br&gt;&lt;br&gt;&lt;b&gt;Big-endian neden?&lt;/b&gt;&lt;br&gt;MQTT &quot;network byte order&quot; ister.&lt;br&gt;Önce MSB sonra LSB." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;align=left;verticalAlign=top;spacingLeft=10;spacingTop=10;arcSize=12;" parent="1" vertex="1">
+          <mxGeometry x="893" y="500" width="238" height="208" as="geometry" />
+        </mxCell>
+        <mxCell id="big_endian_visual" value="&lt;b&gt;Big-Endian Görselleştirme&lt;/b&gt;&lt;hr&gt;= |===== Packet ID = 1 ======|(decimal)&lt;br&gt;       = |======== 0x0001&amp;nbsp; =========|(hex)&lt;br&gt;= | 0000 0000 | 0000 0001&amp;nbsp; &amp;nbsp; |(binary)&lt;br&gt;&amp;nbsp; | ↑ MSB&amp;nbsp; &amp;nbsp; &amp;nbsp;|&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp;↑ LSB|&lt;br&gt;&amp;nbsp; |&amp;nbsp; Byte 2&amp;nbsp; &amp;nbsp;|&amp;nbsp; &amp;nbsp;Byte 3&amp;nbsp; &amp;nbsp; &amp;nbsp;|&lt;br&gt;________________________________________&lt;br&gt;&lt;br&gt;&lt;div&gt;= |==== Packet ID = 300 =====|(decimal)&lt;br&gt;       = |======== 0x012C&amp;nbsp; =========|(hex)&lt;br&gt;       = | 00000001&amp;nbsp; |&amp;nbsp; 00101100&amp;nbsp; &amp;nbsp; |(binary)&lt;br&gt;&amp;nbsp; | ↑ MSB&amp;nbsp; &amp;nbsp; &amp;nbsp;|&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp;↑ LSB|&lt;br&gt;&amp;nbsp; |&amp;nbsp; Byte 2&amp;nbsp; &amp;nbsp;|&amp;nbsp; &amp;nbsp;Byte 3&amp;nbsp; &amp;nbsp; &amp;nbsp;|&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0f0f0;strokeColor=#666666;fontSize=11;align=left;verticalAlign=top;spacingLeft=10;spacingTop=10;fontFamily=Courier New;arcSize=13;" parent="1" vertex="1">
+          <mxGeometry x="1152" y="499" width="282" height="211" as="geometry" />
+        </mxCell>
+        <mxCell id="section3" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;dashed=1;dashPattern=8 4;strokeWidth=2;arcSize=7;" parent="1" vertex="1">
+          <mxGeometry x="50" y="750" width="1395" height="500" as="geometry" />
+        </mxCell>
+        <mxCell id="section3_title" value="&lt;b&gt;3. PAYLOAD&lt;/b&gt; — Topic filter(ler) + QoS (her topic için tekrar eder)" style="text;html=1;align=left;fontColor=#82b366;fontSize=16;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="70" y="760" width="700" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="byte4_box" value="&lt;b&gt;Byte 4&lt;/b&gt;&lt;br&gt;&lt;font size=&quot;5&quot;&gt;0x00&lt;/font&gt;&lt;br&gt;Topic Len MSB" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="80" y="800" width="140" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="byte5_box" value="&lt;b&gt;Byte 5&lt;/b&gt;&lt;br&gt;&lt;font size=&quot;5&quot;&gt;0x20&lt;/font&gt;&lt;br&gt;Topic Len LSB" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="286" y="800" width="140" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="topic_len_explain" value="&lt;b&gt;Topic Length: 0x0020 = 32 byte&lt;/b&gt;&lt;hr&gt;Topic string&#39;in BYTE uzunluğu (karakter sayısı, sondaki null DAHIL DEĞİL).&lt;br&gt;&lt;br&gt;Big-endian (MSB, LSB sırası).&lt;br&gt;&lt;br&gt;&lt;b&gt;Maksimum:&lt;/b&gt; 65535 byte topic.&lt;br&gt;&lt;b&gt;Pratik öneri:&lt;/b&gt; topic&#39;i 100 byte altında tut, broker tarafında index kolay olsun." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;align=left;verticalAlign=top;spacingLeft=10;spacingTop=10;arcSize=12;" parent="1" vertex="1">
+          <mxGeometry x="501" y="795" width="350" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="byte6_38_box" value="&lt;b&gt;Byte 6-37&lt;/b&gt; (32 byte)&lt;br&gt;&lt;br&gt;Topic String (UTF-8)&lt;br&gt;&lt;font face=&quot;Helvetica&quot; style=&quot;font-size: 16px;&quot;&gt;&#39;h&#39;,&#39;b&#39;,&#39;s&#39;,&#39;_&#39;,&#39;s&#39;,&#39;m&#39;,&#39;a&#39;,&#39;r&#39;,&#39;t&#39;,&#39;_&#39;,&#39;b&#39;,&#39;i&#39;,&#39;k&#39;,&#39;e&#39;,&#39;_&#39;,&#39;2&#39;,&#39;0&#39;,&#39;2&#39;,&#39;6&#39;,&#39;_&#39;,&#39;x&#39;,&#39;y&#39;,&#39;z&#39;,&#39;1&#39;,&#39;2&#39;,&#39;3&#39;,&#39;/&#39;,&#39;k&#39;,&#39;o&#39;,&#39;m&#39;,&#39;u&#39;,&#39;t&#39;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="66" y="956" width="782" height="112" as="geometry" />
+        </mxCell>
+        <mxCell id="topic_alts" value="&lt;b&gt;Topic Alternatifleri ve Wildcard&#39;lar&lt;/b&gt;&lt;hr&gt;&lt;b&gt;Düz topic:&lt;/b&gt;&lt;br&gt;hbs/bike_42/gps → tek tek mesaj alır&lt;br&gt;&lt;br&gt;&lt;b&gt;+ wildcard (tek seviye):&lt;/b&gt;&lt;br&gt;hbs/+/gps → bike_42, bike_43, bike_99 hepsi&lt;br&gt;hbs/bike_42/+ → gps, batarya, hız hepsi&lt;br&gt;&lt;br&gt;&lt;b&gt;# wildcard (çok seviye):&lt;/b&gt;&lt;br&gt;hbs/# → hbs altındaki HER ŞEY&lt;br&gt;Sadece sona konabilir.&lt;br&gt;&lt;br&gt;&lt;b&gt;Yasak karakterler:&lt;/b&gt; null (\0), $ (özel)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;align=left;verticalAlign=top;spacingLeft=10;spacingTop=10;arcSize=10;" parent="1" vertex="1">
+          <mxGeometry x="868" y="790" width="260" height="277" as="geometry" />
+        </mxCell>
+        <mxCell id="topic_naming" value="&lt;b&gt;Topic Naming Best Practices&lt;/b&gt;&lt;hr&gt;&lt;b&gt;İyi örnek:&lt;/b&gt;&lt;br&gt;org/device_id/resource&lt;br&gt;hbs/bike_42/gps&lt;br&gt;hbs/bike_42/komut&lt;br&gt;&lt;br&gt;&lt;b&gt;Kötü örnek:&lt;/b&gt;&lt;br&gt;data42 (organize değil)&lt;br&gt;/leading/slash (başta / OLMAZ)&lt;br&gt;my topic (boşluk)&lt;br&gt;&lt;br&gt;&lt;b&gt;Public broker&#39;da:&lt;/b&gt;&lt;br&gt;hbs_smart_bike_2026_xyz123/komut&lt;br&gt;(tahmin edilemez prefix önerilir)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;align=left;verticalAlign=top;spacingLeft=10;spacingTop=10;arcSize=10;" parent="1" vertex="1">
+          <mxGeometry x="1148" y="790" width="282" height="274" as="geometry" />
+        </mxCell>
+        <mxCell id="byte38_box" value="&lt;b&gt;Byte 38&lt;/b&gt;&lt;br&gt;&lt;font size=&quot;5&quot;&gt;0x00&lt;/font&gt;&lt;br&gt;Requested QoS" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="80" y="1110" width="140" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="qos_table" value="&lt;b&gt;QoS Seçenekleri (broker bize PUBLISH yollarken hangi kalitede)&lt;/b&gt;&lt;hr&gt;&lt;b&gt;0x00&lt;/b&gt; → QoS 0 (At most once)&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;Fire &amp; forget, kayıp olabilir, en hızlı, BIZIM SECTIK&lt;br&gt;&lt;br&gt;&lt;b&gt;0x01&lt;/b&gt; → QoS 1 (At least once)&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;En az 1 kez, PUBACK gerek, duplicate olabilir&lt;br&gt;&lt;br&gt;&lt;b&gt;0x02&lt;/b&gt; → QoS 2 (Exactly once)&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;Tam 1 kez, 4-yönlü handshake, en pahalı" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;align=left;verticalAlign=top;spacingLeft=10;spacingTop=10;" parent="1" vertex="1">
+          <mxGeometry x="262" y="1079" width="589" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="qos_note" value="&lt;b&gt;Önemli not&lt;/b&gt;&lt;hr&gt;Broker istediğinden DÜŞÜK QoS verebilir!&lt;br&gt;&lt;br&gt;Sen QoS=2 istedin, broker QoS=1 verebilir.&lt;br&gt;SUBACK&#39;in return code&#39;unu kontrol et.&lt;br&gt;&lt;br&gt;Bu da güvenli — sistem &quot;en iyi efor&quot;u gösterir." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;align=left;verticalAlign=top;spacingLeft=10;spacingTop=10;" parent="1" vertex="1">
+          <mxGeometry x="868" y="1080" width="263" height="159" as="geometry" />
+        </mxCell>
+        <mxCell id="multi_topic" value="&lt;b&gt;Çoklu Topic Subscribe&lt;/b&gt;&lt;hr&gt;Tek SUBSCRIBE&#39;da birden çok topic istenebilir:&lt;br&gt;&lt;br&gt;Payload: [len][topic1][qos1][len][topic2][qos2]...&lt;br&gt;&lt;br&gt;SUBACK her topic için 1 return code döner.&lt;br&gt;&lt;br&gt;Bizim örnek: tek topic, kolay senaryo." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;align=left;verticalAlign=top;spacingLeft=10;spacingTop=10;" parent="1" vertex="1">
+          <mxGeometry x="1156" y="1079" width="272" height="158" as="geometry" />
+        </mxCell>
+        <mxCell id="section_total" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;dashed=1;dashPattern=8 4;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="50" y="1280" width="1395" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="section_total_title" value="&lt;b&gt;TOPLAM PAKET: 39 BYTE&lt;/b&gt; — Tüm byte&#39;ları yan yana" style="text;html=1;align=left;fontColor=#9673a6;fontSize=16;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="70" y="1290" width="500" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="full_packet" value="&lt;font face=&quot;Courier New&quot; size=&quot;2&quot;&gt;&lt;b&gt;82 25&lt;/b&gt; &lt;b&gt;00 01&lt;/b&gt; &lt;b&gt;00 20&lt;/b&gt; 68 62 73 5F 73 6D 61 72 74 5F 62 69 6B 65 5F 32 30 32 36 5F 78 79 7A 31 32 33 2F 6B 6F 6D 75 74 &lt;b&gt;00&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;br&gt;&lt;font face=&quot;Courier New&quot; size=&quot;2&quot;&gt;&lt;b&gt;FH&lt;/b&gt;       &lt;b&gt;Packet ID&lt;/b&gt; &lt;b&gt;TopicLen&lt;/b&gt; &amp;nbsp;h&amp;nbsp; b&amp;nbsp; s&amp;nbsp; _&amp;nbsp; s&amp;nbsp; m&amp;nbsp; a&amp;nbsp; r&amp;nbsp; t&amp;nbsp; _&amp;nbsp; b&amp;nbsp; i&amp;nbsp; k&amp;nbsp; e&amp;nbsp; _&amp;nbsp; 2&amp;nbsp; 0&amp;nbsp; 2&amp;nbsp; 6&amp;nbsp; _&amp;nbsp; x&amp;nbsp; y&amp;nbsp; z&amp;nbsp; 1&amp;nbsp; 2&amp;nbsp; 3&amp;nbsp; /&amp;nbsp; k&amp;nbsp; o&amp;nbsp; m&amp;nbsp; u&amp;nbsp; t&amp;nbsp; &lt;b&gt;QoS&lt;/b&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8f8f8;strokeColor=#aaaaaa;fontSize=12;align=left;verticalAlign=middle;spacingLeft=15;spacingTop=10;spacingBottom=10;" parent="1" vertex="1">
+          <mxGeometry x="70" y="1325" width="1356" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="section_suback" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;dashed=1;dashPattern=8 4;strokeWidth=2;arcSize=12;" parent="1" vertex="1">
+          <mxGeometry x="50" y="1480" width="1396" height="331" as="geometry" />
+        </mxCell>
+        <mxCell id="section_suback_title" value="&lt;b&gt;SUBACK (Broker&#39;ın cevabı)&lt;/b&gt; — Her zaman 5 byte sabit" style="text;html=1;align=left;fontColor=#6c8ebf;fontSize=16;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="70" y="1490" width="600" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="suback_byte0" value="&lt;b&gt;Byte 0&lt;/b&gt;&lt;br&gt;&lt;font size=&quot;5&quot;&gt;0x90&lt;/font&gt;&lt;br&gt;SUBACK opcode" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="80" y="1530" width="120" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="suback_byte1" value="&lt;b&gt;Byte 1&lt;/b&gt;&lt;br&gt;&lt;font size=&quot;5&quot;&gt;0x03&lt;/font&gt;&lt;br&gt;Rem. Length" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="236" y="1530" width="120" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="suback_byte2" value="&lt;b&gt;Byte 2&lt;/b&gt;&lt;br&gt;&lt;font size=&quot;5&quot;&gt;0x00&lt;/font&gt;&lt;br&gt;Pkt ID MSB" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="394" y="1530" width="120" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="suback_byte3" value="&lt;b&gt;Byte 3&lt;/b&gt;&lt;br&gt;&lt;font size=&quot;5&quot;&gt;0x01&lt;/font&gt;&lt;br&gt;Pkt ID LSB" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="547" y="1530" width="120" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="suback_byte4" value="&lt;b&gt;Byte 4&lt;/b&gt;&lt;br&gt;&lt;font size=&quot;5&quot;&gt;0x00&lt;/font&gt;&lt;br&gt;Return Code" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=13;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="697" y="1530" width="120" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="suback_explain" value="&lt;b&gt;SUBACK Anlamı&lt;/b&gt;&lt;hr&gt;Byte 0: 0x90 → bu paket SUBACK&lt;br&gt;Byte 1: 0x03 → 3 byte daha gelecek (pkt_id + ret_code)&lt;br&gt;Byte 2-3: 0x0001 → bizim SUBSCRIBE id&#39;mizle EŞLEŞMELİ&lt;br&gt;Byte 4: 0x00 → broker QoS 0 verdi (kabul edildi)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0f0f0;strokeColor=#666666;fontSize=11;align=left;verticalAlign=top;spacingLeft=10;spacingTop=10;" parent="1" vertex="1">
+          <mxGeometry x="1005" y="1515" width="420" height="101" as="geometry" />
+        </mxCell>
+        <mxCell id="return_codes" value="&lt;b&gt;Return Code Alternatifleri (Byte 4)&lt;/b&gt;&lt;hr&gt;&lt;b&gt;0x00&lt;/b&gt; → Granted QoS 0 ✅&lt;br&gt;&lt;b&gt;0x01&lt;/b&gt; → Granted QoS 1 ✅&lt;br&gt;&lt;b&gt;0x02&lt;/b&gt; → Granted QoS 2 ✅&lt;br&gt;&lt;b&gt;0x80&lt;/b&gt; → REDDEDİLDİ ❌ (yetki yok, topic geçersiz vs.)&lt;br&gt;&lt;br&gt;Broker istediğinden DÜŞÜK QoS verebilir. Sen QoS=2 istedin, broker QoS=1 verebilir." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;align=left;verticalAlign=top;spacingLeft=10;spacingTop=10;" parent="1" vertex="1">
+          <mxGeometry x="1005" y="1636" width="420" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="dogrulama" value="&lt;b&gt;&lt;font style=&quot;font-size: 14px;&quot;&gt;Bizim kod 3 koşulu kontrol eder:&lt;/font&gt;&lt;/b&gt;&lt;hr&gt;&lt;font size=&quot;3&quot;&gt;&lt;font face=&quot;Courier New&quot;&gt;1. suback[0] == 0x90       (gerçekten SUBACK mi?)&lt;br&gt;2. suback_pkt_id == bizim   (cevap bize mi?)&lt;br&gt;3. suback[4] != 0x80        (reddedilmedi mi?)&lt;/font&gt;&lt;br&gt;&lt;br&gt;Üçü de doğru ise → SUBSCRIBE başarılı, MQTT_OK döndür.&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;align=left;verticalAlign=top;spacingLeft=10;spacingTop=10;arcSize=16;" parent="1" vertex="1">
+          <mxGeometry x="81" y="1632" width="738" height="157" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

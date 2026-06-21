@@ -189,6 +189,7 @@ mqtt_return_t mqtt_publish(const char *p_topic_ch, const uint8_t *p_payload_u8, 
                 if( 0 == fp_transport_st->send(mqtt_packet_buffer, d_pkt_idx_u16) )
                 {
                     mqtt_log(">>> PUBLISH Gonderildi <<<");
+                    mqtt_log("══════════════════════════════════════════════════════════════════════════════════════════════\n");
                     mqtt_return_et = MQTT_OK;
                 }
                 else
@@ -274,7 +275,6 @@ mqtt_return_t mqtt_subscribe(const char *p_topic_ch, uint8_t d_qos_u8)
                         {
                             mqtt_log("SUBACK reddedildi veya bozuk");
                         }
-                        
                     }
                     else
                     {
@@ -297,68 +297,56 @@ return mqtt_return_et;
 }
 
 
-///* ─────────── Receiver task — arka planda PUBLISH dinler ─────────── */
-//static void mqtt_receiver_task(void *p_arg)
-//{
-//    static  uint8_t  rx_buffer_au8 [MQTT_RX_BUFFER_SIZE ];
-//    static  char     rx_topic_ch   [MQTT_RX_TOPIC_SIZE  ];
-//    static  uint8_t  rx_payload_au8[MQTT_RX_PAYLOAD_SIZE];
-//
-//            int      d_recv_count      ;
-//            uint8_t  d_control_byte_u8 ;
-//            uint8_t  d_remaining_len_u8;
-//            uint16_t d_topic_len_u16   ;
-//            uint16_t d_payload_len_u16 ;
-//
-//    (void)p_arg;
-//
-//    mqtt_log("Receiver task baslatildi");
-//
-//    while ( true )
-//    {
-//        /* 1. Control byte oku (blocking, sonsuz bekle) */
-//        d_recv_count = fp_transport_st->receive(&d_control_byte_u8, 1U, portMAX_DELAY);
-//
-//        if ( 1 != d_recv_count )                              continue;   /* veri yok, devam et */
-//        if ( 0x30U != (d_control_byte_u8 & 0xF0U) )           continue;   /* PUBLISH degil (sadece 0x3X islenir) */
-//
-//        /* 2. Remaining length (VLE - simdilik tek byte varsay) */
-//        d_recv_count = fp_transport_st->receive(&d_remaining_len_u8, 1U, 1000U);
-//        if ( 1 != d_recv_count )                              continue;
-//
-//        /* 3. Tum paketi al */
-//        if ( d_remaining_len_u8 > sizeof(rx_buffer_au8) )
-//        {
-//            mqtt_log("PUBLISH paketi buffer'dan buyuk, atlandi");
-//            continue;
-//        }
-//
-//        d_recv_count = fp_transport_st->receive(rx_buffer_au8, d_remaining_len_u8, 1000U);
-//        if ( d_remaining_len_u8 != d_recv_count )             continue;
-//
-//        /* 4. Topic length (big-endian) */
-//        d_topic_len_u16 = ((uint16_t)rx_buffer_au8[0] << 8) | (uint16_t)rx_buffer_au8[1];
-//
-//        if ( d_topic_len_u16 >= sizeof(rx_topic_ch) )         continue;
-//
-//        /* 5. Topic string'i kopyala */
-//        memcpy(rx_topic_ch, &rx_buffer_au8[2], d_topic_len_u16);
-//        rx_topic_ch[d_topic_len_u16] = '\0';
-//
-//        /* 6. Payload (QoS=0 oldugu icin packet_id yok) */
-//        d_payload_len_u16 = d_remaining_len_u8 - 2U - d_topic_len_u16;
-//
-//        if ( d_payload_len_u16 >= sizeof(rx_payload_au8) )    continue;
-//
-//        memcpy(rx_payload_au8, &rx_buffer_au8[2 + d_topic_len_u16], d_payload_len_u16);
-//
-//        /* 7. Callback'i cagir */
-//        if ( NULL != fp_message_callback )
-//        {
-//            fp_message_callback(rx_topic_ch, rx_payload_au8, d_payload_len_u16);
-//        }
-//    }
-//}
+/* ─────────── Receiver task — arka planda PUBLISH dinler ─────────── */
+static void mqtt_receiver_task(void *p_arg)
+{
+    static  uint8_t  rx_buffer_au8 [MQTT_RX_BUFFER_SIZE ];
+    static  char     rx_topic_ch   [MQTT_RX_TOPIC_SIZE  ];
+    static  uint8_t  rx_payload_au8[MQTT_RX_PAYLOAD_SIZE];
+
+            int      d_recv_count      ;
+            uint8_t  d_control_byte_u8 ;
+            uint8_t  d_remaining_len_u8;
+            uint16_t d_topic_len_u16   ;
+            uint16_t d_payload_len_u16 ;
+
+    (void)p_arg;
+
+    mqtt_log("Receiver task baslatildi");
+
+    while ( true )
+    {
+        d_recv_count = fp_transport_st->receive(&d_control_byte_u8, 1U, portMAX_DELAY);
+        if ( 1 != d_recv_count ) continue;
+
+        d_recv_count = fp_transport_st->receive(&d_remaining_len_u8, 1U, 1000U);
+        if ( 1 != d_recv_count ) continue;
+
+        d_recv_count = fp_transport_st->receive(rx_buffer_au8, d_remaining_len_u8, 1000U);
+        if ( d_remaining_len_u8 != d_recv_count ) continue;
+
+        if ( 0x30U == (d_control_byte_u8 & 0xF0U) )
+        {
+            d_topic_len_u16 = ((uint16_t)rx_buffer_au8[0] << 8) | (uint16_t)rx_buffer_au8[1];
+
+            if ( d_topic_len_u16 >= sizeof(rx_topic_ch) ) continue;
+
+            memcpy(rx_topic_ch, &rx_buffer_au8[2], d_topic_len_u16);
+            rx_topic_ch[d_topic_len_u16] = '\0';
+
+            d_payload_len_u16 = d_remaining_len_u8 - 2U - d_topic_len_u16;
+
+            if ( d_payload_len_u16 >= sizeof(rx_payload_au8) ) continue;
+
+            memcpy(rx_payload_au8, &rx_buffer_au8[2 + d_topic_len_u16], d_payload_len_u16);
+
+            if ( NULL != fp_message_callback )
+            {
+                fp_message_callback(rx_topic_ch, rx_payload_au8, d_payload_len_u16);
+            }
+        }
+    }
+}
 
 
 mqtt_return_t mqtt_set_message_callback(mqtt_message_callback_t fp_callback)
@@ -374,6 +362,34 @@ mqtt_return_t mqtt_set_message_callback(mqtt_message_callback_t fp_callback)
     return mqtt_return_et;
 }
 
+mqtt_return_t mqtt_start_receiver(void)
+{
+    mqtt_return_t mqtt_return_et = MQTT_ERROR;
+    BaseType_t    task_status                ;
+
+
+    if ( (NULL != fp_transport_st) && (NULL == mqtt_receiver_task_handle) )
+    {
+        task_status = xTaskCreate(  mqtt_receiver_task         ,
+                                    "mqtt_rx"                  ,
+                                    MQTT_RX_TASK_STACK         ,
+                                    NULL                       ,
+                                    MQTT_RX_TASK_PRIORITY      ,
+                                    &mqtt_receiver_task_handle );
+
+        if ( pdPASS == task_status )
+        {
+            mqtt_log("Receiver task olusturuldu");
+            mqtt_return_et = MQTT_OK;
+        }
+        else
+        {
+            mqtt_log("Receiver task olusturulamadi (RAM yetmedi?)");
+        }
+    }
+
+    return mqtt_return_et;
+}
 
 mqtt_return_t mqtt_disconnect(void)
 {

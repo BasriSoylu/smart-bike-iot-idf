@@ -9,18 +9,12 @@
 #include "freertos/stream_buffer.h"
 
 
-typedef enum 
-{
+typedef enum {
     SIM_RX_LINE        ,
     SIM_RX_HTTP_BINARY ,
     SIM_RX_TCP_BINARY
 }sim_rx_modu_t;
 
-
-/* ──────────────────── Static Degiskenler ───────────────────────
-* Modül dışından erişilemez, sadece bu .c içinde kullanılır.
-* STM32'de global değişkeni static yapmak gibi düşün.
-* -------------------------------------------------------------- */
 static          sim800c_io_t         *sim_arayuz         = NULL                        ;   // inject edilen uart arayüzü
 static volatile sim800c_state_t       sim_durum          = SIM800C_IDLE                ;   // mevcut state (volatile: iki task aynı anda okur/yazar)
 static          char                  sim_cevap[4096]    = {0}                         ;   // gelen tüm satırlar (her komut öncesi sıfırlanır)
@@ -33,7 +27,6 @@ static          StreamBufferHandle_t  sim_http_sb        = NULL                 
 static          StreamBufferHandle_t  sim_tcp_sb         = NULL                        ;   // TCP  binary stream
 static volatile sim_tcp_durum_t       sim_tcp_durum      = TCP_DISCONNECTED            ;
 
-/* ──────────────────── Static Fonksiyonlar ─────────────────────── */
 static void sim800c_reader_task        (      void *arg                                                );
 static void sim800c_logf               (const char *fmt   , ...                                        );
 static void sim800c_process_line       (const char *line                                               );
@@ -47,18 +40,14 @@ static void urc_connect_fail_isle      (const char *line                        
 static void urc_already_conn_isle      (const char *line                                               );
 static void urc_closed_isle            (const char *line                                               );
 
-
-/* ──────────────────── URC Tablo Yapilari ─────────────────────── */
 typedef void (*urc_isleyici_t)(const char *line);
 
 typedef struct {
     const char     *prefix              ;
     urc_isleyici_t  fonksiyon           ;
-    bool            binary_takip_ediyor ;  /* true: bu URC sonrası N byte binary gelir, sim_cevap'a yazma */
+    bool            binary_takip_ediyor ;
 } sim800c_urc_satiri_t;
 
-
-/* ──────────────────── URC Fihristimiz (Tablo) ─────────────────── */
 static const sim800c_urc_satiri_t urc_tablosu[] = {
     { "+HTTPREAD:"     , urc_httpread_isle    , true  },
     { "+RECEIVE,"      , urc_receive_isle     , true  },
@@ -72,7 +61,6 @@ static const sim800c_urc_satiri_t urc_tablosu[] = {
 #define URC_TABLO_BOYUTU (sizeof(urc_tablosu) / sizeof(urc_tablosu[0]))
 
 
-/* ──────────────────── Dahili Log Yardimcisi ─────────────────── */
 static void sim800c_logf(const char *fmt, ...)
 {
     if ( (NULL != sim_arayuz) && (NULL != sim_arayuz->log) )
@@ -91,7 +79,6 @@ static void sim800c_logf(const char *fmt, ...)
     }
 }
 
-/* ─────────────────── Public API Implementasyonlari ──────────────────── */
 void sim800c_init(sim800c_io_t *io)
 {
     sim_arayuz = io;
@@ -100,7 +87,7 @@ void sim800c_init(sim800c_io_t *io)
     memset(sim_cevap,     0, sizeof(sim_cevap));
     memset(sim_son_komut, 0, sizeof(sim_son_komut));
 
-    sim_http_sb = xStreamBufferCreate(2048, 1);   // 2KB buffer, 1 byte trigger
+    sim_http_sb = xStreamBufferCreate(2048, 1); 
     sim_tcp_sb  = xStreamBufferCreate(2048, 1);
 
     if ( (NULL == sim_http_sb) || (NULL == sim_tcp_sb) )
@@ -130,7 +117,6 @@ int sim800c_baslat(void)
         sim_arayuz->set_baud(baud_listesi[i]);
         vTaskDelay(pdMS_TO_TICKS(100));
 
-        /* Autobaud kilitlenmesi icin 3 deneme + 3sn timeout (modul yavas cevap verebilir) */
         for ( j = 0; j < 3; j++ )
         {
             if ( 0 == sim800c_cmd_wait(AT_TEST, "OK", BEKLE_3_SN) )
@@ -201,7 +187,7 @@ void sim800c_send_command(const char *cmd)
     char    buf[160];
     uint8_t idle_mi ;
 
-    snprintf(sim_son_komut, sizeof(sim_son_komut), "%s", cmd);  // Echo kontrolu icin sakla
+    snprintf(sim_son_komut, sizeof(sim_son_komut), "%s", cmd);
     snprintf(buf, sizeof(buf), "%s\r\n", cmd);
 
     portENTER_CRITICAL(&sim_mux);
@@ -223,20 +209,16 @@ void sim800c_send_command(const char *cmd)
     }
 }
 
-/* ──────────────────── URC İşleyici Fonksiyonlar ─────────────────── */
 static void urc_httpread_isle(const char *line)
 {
     int beklenen_len = 0;
-    
-    // Gelen metnin içinden sadece sayıyı (kaç byte geleceğini) çekiyoruz
+
     sscanf(strstr(line, "+HTTPREAD:"), "+HTTPREAD: %d", &beklenen_len);
-    
+
     if( 0 < beklenen_len )
     {
         sim_rx_kalan = (uint32_t)beklenen_len;
         sim_rx_modu  = SIM_RX_HTTP_BINARY;
-        // İstersen buraya da bir log ekleyebilirsin: 
-        // sim800c_logf("HTTP binary mod: %d byte bekleniyor", beklenen_len);
     }
 }
 
@@ -244,18 +226,16 @@ static void urc_receive_isle(const char *line)
 {
     int beklenen_len = 0;
 
-    // TCP üzerinden gelecek verinin boyutunu okuyoruz
     sscanf(line, "+RECEIVE,%d", &beklenen_len);
 
     if( 0 < beklenen_len)
     {
         sim_rx_kalan = (uint32_t)beklenen_len;
         sim_rx_modu  = SIM_RX_TCP_BINARY;
-        sim800c_logf("TCP binary mod: %d byte bekleniyor", beklenen_len);
+        sim800c_logf("TCP binary mod: %d byte bekleniyor\n", beklenen_len);
     }
 }
 
-/* +IPD,<len>: prefix - AT+CIPHEAD=1 ile aktif olur, +RECEIVE'nin alternatifi */
 static void urc_ipd_isle(const char *line)
 {
     int beklenen_len = 0;
@@ -266,7 +246,7 @@ static void urc_ipd_isle(const char *line)
     {
         sim_rx_kalan = (uint32_t)beklenen_len;
         sim_rx_modu  = SIM_RX_TCP_BINARY;
-        sim800c_logf("TCP binary mod (+IPD): %d byte bekleniyor", beklenen_len);
+        sim800c_logf("TCP binary mod (+IPD): %d byte bekleniyor\n", beklenen_len);
     }
 }
 
@@ -298,34 +278,28 @@ static void sim800c_process_line(const char *line)
 {
     uint32_t dolu_uzunluk    ;
     uint32_t bos_alan        ;
-    bool     urc_yakalandi = false; // Yeni ekledik: Eğer satır bir URC ise bunu bilelim
+    bool     urc_yakalandi = false;
 
     if( (NULL == line) || ('\0' == line[0]) )
     {
         return;
     }
 
-    /* ─────────── 1. URC Tablosunu Kontrol Et ─────────── */
     for (int i = 0; i < URC_TABLO_BOYUTU; i++)
     {
-        // Gelen satırın içinde tablodaki prefix (kelime) var mı?
         if (NULL != strstr(line, urc_tablosu[i].prefix))
         {
-            // Kelime bulundu! İlgili fonksiyonu çalıştır.
             urc_tablosu[i].fonksiyon(line);
             urc_yakalandi = true;
             
-            // Eger URC binary takip eden bir habercii ise (+IPD, +RECEIVE, +HTTPREAD)
-            // sim_cevap'a yazmamak icin fonksiyondan cikiyoruz.
             if ( true == urc_tablosu[i].binary_takip_ediyor )
             {
                 return;
             }
-            break; // Eşleşmeyi bulduk, tablonun geri kalanına bakmaya gerek yok.
+            break;
         }
     }
 
-    /* ─────────── 2. State Machine (Echo ve Yanıt Bekleme) ─────────── */
     if ( SIM800C_ECHO_BEKLE == sim_durum )
     {
         if ( 0 == strncmp(line, sim_son_komut, strlen(sim_son_komut)) )
@@ -342,7 +316,6 @@ static void sim800c_process_line(const char *line)
         bos_alan     = sizeof(sim_cevap) - dolu_uzunluk - 1;
         snprintf( (sim_cevap + dolu_uzunluk), bos_alan, "%s\n", line );
         
-        // Eğer bu satır bir URC değilse (yani normal bir AT cevabıysa) logla
         if (!urc_yakalandi) {
             sim800c_logf("Satir alindi: %s", line);
         }
@@ -376,7 +349,6 @@ static void sim800c_reader_task(void *arg)
 
         switch (sim_rx_modu)
         {
-            /* ─────────── LINE MODU: mevcut davranis ─────────── */
             case SIM_RX_LINE:
             {
                 if('\r' == byte)
@@ -395,19 +367,12 @@ static void sim800c_reader_task(void *arg)
                 }
                 else if ( ('>' == byte) && (0 == line_pos) )
                 {
-                    /* SIM800 CIPSEND/HTTP veri prompt'u - \r\n ile bitmiyor,
-                     * tek karakter geliyor. Hemen process_line'a teslim et
-                     * ki cmd_wait ">" karakterini sim_cevap'ta gorsun. */
                     line_buf[0] = '>';
                     line_buf[1] = '\0';
                     sim800c_process_line(line_buf);
-                    /* line_pos zaten 0 */
                 }
                 else if( (':' == byte) && (0 == strncmp(line_buf, "+IPD,", 5)) )
                 {
-                    /* SIM800 +IPD,N: URC'si \r\n ile bitmiyor - ':' sonrasi hemen
-                    * N byte binary geliyor. ':' goruldugunde URC tamamlanmis sayilir,
-                    * urc_ipd_isle sim_rx_modu'yu TCP_BINARY'e cevirir. */
                     line_buf[line_pos] = '\0';
                     urc_ipd_isle(line_buf);
                     line_pos = 0;
@@ -426,7 +391,6 @@ static void sim800c_reader_task(void *arg)
                 }
                 break;
             }
-             /* ─────────── HTTP BINARY MODU: N byte → http_sb ─────────── */
             case SIM_RX_HTTP_BINARY:
             {
                 xStreamBufferSend(sim_http_sb, &byte, 1, 0);
@@ -438,8 +402,6 @@ static void sim800c_reader_task(void *arg)
                 }
                 break;
             }
-
-            /* ─────────── TCP BINARY MODU: N byte → tcp_sb ─────────── */
             case SIM_RX_TCP_BINARY:
             {
                 xStreamBufferSend(sim_tcp_sb, &byte, 1, 0);
@@ -451,8 +413,6 @@ static void sim800c_reader_task(void *arg)
                 }
                 break;
             }
-
-            /* ─────────── HATALI MOD ATAMASI ─────────── */
             default:
             {
                 sim800c_logf("Hatali Okuma Modu Atandi");
@@ -671,7 +631,6 @@ int sim800c_http_get_json(const char *url, char *out_buf, int out_max)
 
     if ( 0 == sim800c_cmd_wait(AT_HTTP_READ, "OK", BEKLE_5_SN) )
     {
-        /* JSON icerik stream buffer'da (reader_task +HTTPREAD URC'sini yakalayip oraya pushladi) */
         size_t alinan = xStreamBufferReceive  ( sim_http_sb,
                                                 (uint8_t *)out_buf,
                                                 (size_t)(out_max - 1),
@@ -789,19 +748,10 @@ static int sim800c_http_read_adimlari(int offset, uint8_t *out_buf, int size, in
     int       kalan             ;
     uint8_t  *p                 ;
 
-    /* Eski verileri at — bu okuma icin temiz bir SB ile basla */
     xStreamBufferReset(sim_http_sb);
 
-    /* AT+HTTPREAD komutunu gonder (cevap beklemeden, sadece send) */
     snprintf(komut, sizeof(komut), "%s=%d,%d\r\n", AT_HTTP_READ, offset, size);
     sim_arayuz->send( (const uint8_t *)komut, strlen(komut) );
-
-    /* Reader_task otomatik:
-     * 1) "+HTTPREAD: N" URC'sini yakalar
-     * 2) sim_rx_modu = SIM_RX_HTTP_BINARY yapar
-     * 3) N byte'i sim_http_sb'ye pushlar
-     * 4) LINE moda geri doner
-     * Biz sadece SB'den okuyoruz. */
 
     p     = out_buf;
     kalan = size;
@@ -828,10 +778,6 @@ int sim800c_http_read(int offset, uint8_t *out_buf, int size, int *out_len)
 {
     int geri_donus_degeri;
 
-    /* Yeni mimaride flush gereksiz: reader_task surekli aktif,
-     * byte'lar otomatik stream buffer'a akiyor. Eski sim_binary_modu
-     * dizayninda kalan flush() cagrisi reader ile race'e girip
-     * uart_flush_input deadlock'una yol aciyordu - kaldirildi. */
     vTaskDelay(pdMS_TO_TICKS(150));
 
     geri_donus_degeri = sim800c_http_read_adimlari(offset, out_buf, size, out_len);
@@ -856,32 +802,20 @@ int sim800c_http_close(void)
     return geri_donus_degeri;   
 }
 
-/* ──────────────────── TCP / IP Katmanı ─────────────────────── */
-
 int sim800c_tcp_open(const char *ip, int port)
 {
     char komut[128];
 
-    /* Onceki IP state'ini sifirla - CIPMUX ancak temiz state'te degistirilebilir */
     sim800c_cmd_wait("AT+CIPSHUT", "SHUT OK", BEKLE_5_SN);
 
-    // 1. Tek bağlantı moduna geç
     if (sim800c_cmd_wait(AT_CIPMUX_SINGLE, "OK", BEKLE_3_SN) != 0)
     {
         sim800c_logf("TCP: CIPMUX ayarlanamadi!");
         return -1;
     }
 
-    /* TCP verisi geldiginde "+IPD,<len>:" prefix eklenmesi icin */
     sim800c_cmd_wait("AT+CIPHEAD=1", "OK", BEKLE_3_SN);
 
-    /* NOT: AT+CIPRXGET=1 (manuel mod) CIKARILDI.
-     * Default mod (CIPRXGET=0 - otomatik) gerekli cunku +RECEIVE,N: URC'si
-     * bizim reader_task'in HTTP_BINARY/TCP_BINARY state machine'i ile
-     * uyumlu. Manuel mod +CIPRXGET: 1,N notification doner, yeniden
-     * AT+CIPRXGET=2,N ile cekmek gerek - mevcut mimariyle uyumsuz. */
-
-    // 2. TCP Bağlantısını Başlatıyoruz (Senin AT_CIPSTART makronu kullanarak)
     snprintf(komut, sizeof(komut), "%s=\"TCP\",\"%s\",\"%d\"", AT_CIPSTART, ip, port);
     sim800c_logf("TCP Baglaniliyor: %s:%d", ip, port);
     
@@ -900,7 +834,6 @@ int sim800c_tcp_send(const uint8_t *data, int len)
     char komut[32];
     uint32_t gecen_sure = 0;
 
-    // Senin AT_CIPSEND makronu kullanarak uzunluğu ekliyoruz
     snprintf(komut, sizeof(komut), "%s=%d", AT_CIPSEND, len);
     
     if (sim800c_cmd_wait(komut, ">", BEKLE_5_SN) != 0)
@@ -941,28 +874,43 @@ int sim800c_tcp_send(const uint8_t *data, int len)
 
 int sim800c_tcp_recv(uint8_t *out_buf, int max_size, uint32_t timeout_ms)
 {
-    size_t okunan = 0;
+    size_t     toplam_okunan  = 0;
+    TickType_t baslangic_tick = xTaskGetTickCount();
+    TickType_t timeout_tick   = pdMS_TO_TICKS(timeout_ms);
 
-    // Stream buffer henüz oluşturulmadıysa hata dön
     if (sim_tcp_sb == NULL)
     {
         return -1;
     }
 
-    // URC tablomuzun arka planda sim_tcp_sb içine doldurduğu verileri 
-    // doğrudan buradan MQTT veya main katmanı için çekiyoruz.
-    okunan = xStreamBufferReceive(  sim_tcp_sb, 
-                                    out_buf, 
-                                    (size_t)max_size, 
-                                    pdMS_TO_TICKS(timeout_ms));
+    while (toplam_okunan < (size_t)max_size)
+    {
+        TickType_t gecen_tick = xTaskGetTickCount() - baslangic_tick;
 
-    // Kaç byte okuduğunu döndürür (0 dönerse timeout olmuştur)
-    return (int)okunan; 
+        if (gecen_tick >= timeout_tick)
+        {
+            break;
+        }
+
+        TickType_t kalan_tick = timeout_tick - gecen_tick;
+
+        size_t alinan = xStreamBufferReceive(   sim_tcp_sb,
+                                                out_buf + toplam_okunan,
+                                                (size_t)max_size - toplam_okunan,
+                                                kalan_tick);
+        if (0 == alinan)
+        {
+            break;
+        }
+
+        toplam_okunan += alinan;
+    }
+
+    return (int)toplam_okunan;
 }
 
 int sim800c_tcp_close(void)
 {
-    // Senin AT_CIPCLOSE makronu doğrudan kullanıyoruz
     if (sim800c_cmd_wait(AT_CIPCLOSE, "CLOSE OK", BEKLE_5_SN) == 0)
     {
         sim800c_logf("TCP Baglantisi Kapatildi.");
