@@ -1,6 +1,6 @@
 <mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/26.0.9 Chrome/128.0.6613.186 Electron/32.2.5 Safari/537.36" version="26.0.9">
   <diagram name="SIM800C URC + Binary Data Mimarisi" id="sim800c-urc-binary">
-    <mxGraphModel dx="2603" dy="1528" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="1400" pageHeight="900" math="0" shadow="0">
+    <mxGraphModel dx="1580" dy="2088" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="1400" pageHeight="900" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -16,12 +16,6 @@
         <mxCell id="modu" value="sim_rx_modu = ?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;fontStyle=1;" parent="1" vertex="1">
           <mxGeometry x="630" y="320" width="160" height="80" as="geometry" />
         </mxCell>
-        <mxCell id="line-label" value="LINE" style="text;html=1;align=center;fontSize=12;fontStyle=1;fontColor=#82b366;" parent="1" vertex="1">
-          <mxGeometry x="430" y="430" width="60" height="20" as="geometry" />
-        </mxCell>
-        <mxCell id="binary-label" value="TCP_BINARY" style="text;html=1;align=center;fontSize=12;fontStyle=1;fontColor=#b85450;" parent="1" vertex="1">
-          <mxGeometry x="900" y="430" width="120" height="20" as="geometry" />
-        </mxCell>
         <mxCell id="process-line" value="process_line(line_buf)&#xa;&#xa;Satır biriktir (\r\n veya &#39;:&#39; a kadar)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" parent="1" vertex="1">
           <mxGeometry x="290" y="460" width="240" height="70" as="geometry" />
         </mxCell>
@@ -29,10 +23,10 @@
           <mxGeometry x="199" y="570" width="420" height="160" as="geometry" />
         </mxCell>
         <mxCell id="handler-short" value="Handler çağrılır&#xa;(kısa AT cevabı)&#xa;&#xa;Örn: urc_connect_ok_isle()&#xa;urc_no_carrier_isle()&#xa;→ binary_takip_ediyor = false&#xa;→ İş bitti, devam" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;align=left;spacingLeft=10;" parent="1" vertex="1">
-          <mxGeometry x="20" y="770" width="280" height="120" as="geometry" />
+          <mxGeometry x="-100" y="840" width="280" height="120" as="geometry" />
         </mxCell>
         <mxCell id="handler-binary" value="urc_ipd_isle() çağrılır&#xa;&#xa;sim_rx_kalan = 43&#xa;sim_rx_modu = TCP_BINARY&#xa;&#xa;binary_takip_ediyor = true&#xa;→ Mod değişti, sonraki bayt&#xa;   binary olarak işlenecek" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;align=left;spacingLeft=10;" parent="1" vertex="1">
-          <mxGeometry x="340" y="770" width="280" height="140" as="geometry" />
+          <mxGeometry x="374" y="840" width="280" height="120" as="geometry" />
         </mxCell>
         <mxCell id="binary-mode" value="TCP_BINARY MODU&#xa;&#xa;Her gelen baytı stream buffer&#39;a yaz:&#xa;xStreamBufferSend(sim_tcp_sb, &amp;byte, 1, 0)&#xa;&#xa;sim_rx_kalan--&#xa;sim_rx_kalan == 0 → modu LINE&#39;a döndür" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;align=left;spacingLeft=10;" parent="1" vertex="1">
           <mxGeometry x="870" y="460" width="380" height="120" as="geometry" />
@@ -44,10 +38,10 @@
           <mxGeometry x="920" y="795" width="280" height="80" as="geometry" />
         </mxCell>
         <mxCell id="mqtt-task" value="mqtt_receiver_task&#xa;(arka plan task)&#xa;&#xa;1) 1 byte control oku&#xa;2) 1 byte remaining_len oku&#xa;3) N byte payload oku&#xa;4) PUBLISH ise callback çağır" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;align=left;spacingLeft=10;" parent="1" vertex="1">
-          <mxGeometry x="1240" y="780" width="140" height="120" as="geometry" />
+          <mxGeometry x="1240" y="775" width="140" height="120" as="geometry" />
         </mxCell>
         <mxCell id="callback" value="fp_message_callback&#xa;(kullanıcı handler&#39;ı)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontStyle=1;" parent="1" vertex="1">
-          <mxGeometry x="1395" y="800" width="140" height="80" as="geometry" />
+          <mxGeometry x="1410" y="795" width="140" height="80" as="geometry" />
         </mxCell>
         <mxCell id="edge-uart-reader" style="endArrow=classic;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeWidth=2;" parent="1" source="uart" target="reader" edge="1">
           <mxGeometry relative="1" as="geometry" />
@@ -56,22 +50,47 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="edge-modu-line" value="LINE" style="endArrow=classic;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeWidth=2;strokeColor=#82b366;fontSize=12;fontStyle=1;fontColor=#82b366;" parent="1" source="modu" target="process-line" edge="1">
-          <mxGeometry relative="1" as="geometry" />
+          <mxGeometry x="-0.3125" relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="410" y="360" />
+            </Array>
+            <mxPoint as="offset" />
+          </mxGeometry>
         </mxCell>
         <mxCell id="edge-modu-binary" value="TCP_BINARY" style="endArrow=classic;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeWidth=2;strokeColor=#b85450;fontSize=12;fontStyle=1;fontColor=#b85450;" parent="1" source="modu" target="binary-mode" edge="1">
-          <mxGeometry relative="1" as="geometry" />
+          <mxGeometry x="-0.2432" relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1060" y="360" />
+            </Array>
+            <mxPoint as="offset" />
+          </mxGeometry>
         </mxCell>
         <mxCell id="edge-line-urc" style="endArrow=classic;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeWidth=2;" parent="1" source="process-line" target="urc-table" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="edge-urc-short" value="binary_takip_ediyor=false" style="endArrow=classic;html=1;exitX=0;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeWidth=2;fontSize=10;fontStyle=2;" parent="1" source="urc-table" target="handler-short" edge="1">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="edge-urc-short" value="binary_takip_ediyor=false" style="endArrow=classic;html=1;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeWidth=2;fontSize=10;fontStyle=2;" parent="1" source="urc-table" target="handler-short" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="304" y="770" />
+              <mxPoint x="40" y="770" />
+            </Array>
+          </mxGeometry>
         </mxCell>
-        <mxCell id="edge-urc-binary" value="binary_takip_ediyor=true&#xa;(örn: +IPD,)" style="endArrow=classic;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeWidth=2;fontSize=10;fontStyle=2;strokeColor=#b85450;" parent="1" source="urc-table" target="handler-binary" edge="1">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="edge-urc-binary" value="binary_takip_ediyor=true&#xa;(örn: +IPD,)" style="endArrow=classic;html=1;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeWidth=2;fontSize=10;fontStyle=2;strokeColor=#b85450;" parent="1" source="urc-table" target="handler-binary" edge="1">
+          <mxGeometry x="-0.0909" y="-64" relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="514" y="770" />
+            </Array>
+            <mxPoint as="offset" />
+          </mxGeometry>
         </mxCell>
-        <mxCell id="edge-handler-mode" value="sonraki bayttan&#xa;itibaren modu&#xa;değiştirir" style="endArrow=classic;html=1;exitX=1;exitY=0;exitDx=0;exitDy=0;entryX=0;entryY=1;entryDx=0;entryDy=0;strokeWidth=2;strokeColor=#b85450;dashed=1;fontSize=10;fontStyle=2;curved=1;" parent="1" source="handler-binary" target="binary-mode" edge="1">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="edge-handler-mode" value="Sonraki Bayttan&lt;br&gt;İtibaren Modu&lt;br&gt;Değiştirir" style="endArrow=classic;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;strokeColor=#b85450;dashed=1;fontSize=10;fontStyle=2;curved=0;rounded=1;" parent="1" source="handler-binary" target="binary-mode" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="760" y="900" />
+              <mxPoint x="760" y="520" />
+            </Array>
+          </mxGeometry>
         </mxCell>
         <mxCell id="edge-binary-sb" style="endArrow=classic;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeWidth=2;strokeColor=#d79b00;" parent="1" source="binary-mode" target="stream-buffer" edge="1">
           <mxGeometry relative="1" as="geometry" />
@@ -107,10 +126,10 @@
           <mxGeometry x="40" y="310" width="120" height="30" as="geometry" />
         </mxCell>
         <mxCell id="example-title" value="ÖRNEK AKIŞ — &quot;hbs_smart_bike_2026_xyz123/komut&quot; topic&#39;ine gelen &#39;gaz_ac&#39; mesajı" style="text;html=1;align=center;fontSize=14;fontStyle=1;fontColor=#b85450;" parent="1" vertex="1">
-          <mxGeometry x="280" y="930" width="900" height="30" as="geometry" />
+          <mxGeometry x="270" y="1000" width="900" height="30" as="geometry" />
         </mxCell>
         <mxCell id="example-text" value="1. Broker → SIM800C: TCP üzerinden MQTT PUBLISH paketi (42 byte) gelir&#xa;2. SIM800C UART&#39;a yazar:  &quot;+IPD,42:0x30 0x28 0x00 0x20 &#39;h&#39; &#39;b&#39; &#39;s&#39; ... &#39;g&#39; &#39;a&#39; &#39;z&#39; &#39;_&#39; &#39;a&#39; &#39;c&#39;&quot;&#xa;3. reader_task LINE modunda → byte byte birikiyor → &#39;:&#39; karakteri görülünce process_line tetiklenir&#xa;4. process_line → urc_tablosu&#39;nda &quot;+IPD,&quot; prefix&#39;i eşleşir → urc_ipd_isle() çağrılır&#xa;5. urc_ipd_isle: sim_rx_kalan=42, sim_rx_modu=TCP_BINARY (binary_takip_ediyor=true → return)&#xa;6. Sonraki 42 bayt artık binary mod case&#39;ine girer → xStreamBufferSend ile sim_tcp_sb&#39;ye akar&#xa;7. mqtt_receiver_task xStreamBufferReceive ile bayt çeker → MQTT paketi parse eder&#xa;8. Control byte 0x30 (PUBLISH) → topic + payload ayrıştırılır → fp_message_callback çağrılır" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;align=left;spacingLeft=15;spacingTop=10;" parent="1" vertex="1">
-          <mxGeometry x="200" y="970" width="1050" height="180" as="geometry" />
+          <mxGeometry x="190" y="1040" width="1050" height="180" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>

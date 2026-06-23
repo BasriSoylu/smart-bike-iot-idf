@@ -8,6 +8,7 @@
 #include "ota.h"
 #include "versiyon.h"
 #include "mqtt.h"
+#include "cJSON.h"
 
 static const char *TAG = "MAIN";
 
@@ -38,7 +39,7 @@ static void mqtt_log_wrapper      (const char    *msg                           
 /* ──────────────────── main fonksiyonlarinin prototipleri ────────────────── */
 static void cevresel_ayarla         ();
 static void cevresel_baslat         ();
-static void yazilim_versiyon_kontrol();
+static void yazilim_versiyon_kontrol(uint8_t d_komut_u8);
 static void tcp_test                ();
 static void mqtt_test               ();
 static void mqtt_message_handler    (const char *p_topic_ch, const uint8_t *p_payload_u8, size_t d_payload_len);
@@ -54,6 +55,7 @@ typedef struct
 }gps_veri_paketi_t;
 gps_veri_paketi_t gps_veri_paketi_st;
 
+static volatile uint8_t yazilim_kontrol_flag_u8 = 0U; /* 0 = beklenmiyor, 1/2/3 = MQTT'den gelen komut */
 
 void app_main(void)
 {
@@ -136,31 +138,73 @@ static void cevresel_baslat()
     }
 }
 
-static void yazilim_versiyon_kontrol()
+static void yazilim_versiyon_kontrol(uint8_t d_komut_u8)
 {
     ota_firmware_bilgi_t firmware_bilgi_st;
     ota_sonuc_t          ota_sonuc        ;
-    
-    ota_sonuc = ota_kontrol(&firmware_bilgi_st);
-    
-    switch ( ota_sonuc )
+
+    switch ( d_komut_u8 )
     {
-        case OTA_OK:
-        ESP_LOGI(TAG, "Yeni firmware bulundu, guncellemeye baslaniyor...");
-        ota_sonuc = ota_guncelle(&firmware_bilgi_st);
-        if ( OTA_OK != ota_sonuc )
+        case 1U:
         {
-            ESP_LOGE(TAG, "OTA guncelleme basarisiz, kod=%d", ota_sonuc);
+            ESP_LOGI(TAG, "Komut 1: Versiyon kontrolu istenmedi, devam.");
+            break;
         }
-        break;
-        
-        case OTA_GUNCEL:
-        ESP_LOGI(TAG, "Firmware zaten guncel, devam ediliyor.");
-        break;
-        
+        case 2U:
+        {
+            ESP_LOGI(TAG, "Komut 2: Versiyon kontrol ediliyor...");
+            ota_sonuc = ota_kontrol(&firmware_bilgi_st);
+
+            if ( OTA_OK == ota_sonuc )
+            {
+                mqtt_disconnect();                             
+                ESP_LOGI(TAG, "MQTT kapatildi, OTA basliyor.");
+    
+                ESP_LOGI(TAG, "Yeni firmware var, guncellenecek...");
+                ota_sonuc = ota_guncelle(&firmware_bilgi_st);
+                if ( OTA_OK != ota_sonuc )
+                {
+                    ESP_LOGE(TAG, "Guncelleme basarisiz, kod=%d", ota_sonuc);
+                }
+            }
+            else if ( OTA_GUNCEL == ota_sonuc )
+            {
+                ESP_LOGI(TAG, "Firmware zaten guncel.");
+            }
+            else
+            {
+                ESP_LOGE(TAG, "OTA kontrol hatasi, kod=%d", ota_sonuc);
+            }
+            break;
+        }
+        case 3U:
+        {
+            ESP_LOGI(TAG, "Komut 3: Zorla guncelleme (versiyon kontrolu atlandi)...");
+            ota_sonuc = ota_kontrol(&firmware_bilgi_st);
+            
+            if ( (OTA_OK == ota_sonuc) || (OTA_GUNCEL == ota_sonuc) )
+            {
+                mqtt_disconnect();                             
+                ESP_LOGI(TAG, "MQTT kapatildi, OTA basliyor."); 
+                
+                ESP_LOGI(TAG, "Sunucudaki firmware yukleniyor...");
+                ota_sonuc = ota_guncelle(&firmware_bilgi_st);
+                if ( OTA_OK != ota_sonuc )
+                {
+                    ESP_LOGE(TAG, "Zorla guncelleme basarisiz, kod=%d", ota_sonuc);
+                }
+            }
+            else
+            {
+                ESP_LOGE(TAG, "Sunucu bilgisi alinamadi, kod=%d", ota_sonuc);
+            }
+            break;
+        }
         default:
-        ESP_LOGE(TAG, "OTA kontrol hatasi, kod=%d", ota_sonuc);
-        break;
+        {
+            ESP_LOGW(TAG, "Bilinmeyen komut: %u", (unsigned)d_komut_u8);
+            break;
+        }
     }
 }
 
@@ -243,6 +287,13 @@ static void mqtt_test()
         gps_veri_paketi_st.gps_longitute_f += 0.0001f;
         gps_veri_paketi_st.gps_altitute_f  += 0.5f   ;
 
+        if ( 0U != yazilim_kontrol_flag_u8)
+        {
+            uint8_t d_komut_u8 = yazilim_kontrol_flag_u8;
+            yazilim_kontrol_flag_u8 = 0U;  
+            yazilim_versiyon_kontrol(d_komut_u8);
+        }
+
         json_len = snprintf(json_payload, sizeof(json_payload),
                             "{\"Cihaz_ID\":%u,\"Yukseklik\":%.2f,\"Enlem\":%.6f,\"Boylam\":%.6f}" ,
                                             (unsigned)  gps_veri_paketi_st.devices_id_u32 ,
@@ -272,13 +323,49 @@ static void mqtt_message_handler(   const   char    *p_topic_ch   ,
                                     const   uint8_t *p_payload_u8 ,
                                             size_t   d_payload_len )
 {
-    ESP_LOGI(TAG, "══════════════════════════════════════════════════════════════════════════════════════════════");
+    cJSON *p_json_st        = NULL;
+    cJSON *p_kontrol_st     = NULL;
+
+        ESP_LOGI(TAG, "══════════════════════════════════════════════════════════════════════════════════════════════");
     ESP_LOGI(TAG, ">>> MQTT MESAJ GELDI <<<");
     ESP_LOGI(TAG, "Topic   : %s"     , p_topic_ch);
     ESP_LOGI(TAG, "Payload : %.*s"   , (int)d_payload_len, (const char *)p_payload_u8);
-    ESP_LOGI(TAG, "Boyut   : %u byte", (unsigned)d_payload_len);
-    ESP_LOGI(TAG, "══════════════════════════════════════════════════════════════════════════════════════════════\n");
+
+    p_json_st = cJSON_ParseWithLength((const char *)p_payload_u8, d_payload_len);
+
+    if(NULL != p_json_st)
+    {
+        p_kontrol_st = cJSON_GetObjectItem(p_json_st, "YAZILIM_KONTROL");
+
+        if ( (NULL != p_kontrol_st) && (true == cJSON_IsNumber(p_kontrol_st)) )
+        {
+            uint8_t d_komut_u8 = (uint8_t)p_kontrol_st->valueint;
+
+            if ( (1U <= d_komut_u8) && (3U >= d_komut_u8) )
+            {
+                yazilim_kontrol_flag_u8 = d_komut_u8;
+                ESP_LOGI(TAG, "YAZILIM_KONTROL komutu alindi: %u", (unsigned)d_komut_u8);
+            }
+            else
+            {
+                ESP_LOGW(TAG, "Gecersiz YAZILIM_KONTROL degeri: %u (beklenen: 1-3)", (unsigned)d_komut_u8);
+            }
+        }
+        else
+        {
+            ESP_LOGW(TAG, "YAZILIM_KONTROL alani yok veya sayi degil");
+        }
+    }
+    else
+    {
+        ESP_LOGE(TAG, "JSON parse edilemedi!");
+    }
+
+        ESP_LOGI(TAG, "══════════════════════════════════════════════════════════════════════════════════════════════");
+
+    cJSON_Delete(p_json_st);
 }
+
 
 /* ─────────────── sim800c_io_t wrapper fonksiyonlari ─────────────── */
 static void sim_send(const uint8_t *data, size_t len)
