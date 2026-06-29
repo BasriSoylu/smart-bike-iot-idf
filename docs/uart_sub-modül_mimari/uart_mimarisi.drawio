@@ -1,6 +1,6 @@
 <mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/26.0.9 Chrome/128.0.6613.186 Electron/32.2.5 Safari/537.36" version="26.0.9">
   <diagram name="UART Sub-Modül Mimarisi" id="uart-arch">
-    <mxGraphModel dx="2052" dy="1403" grid="1" gridSize="5" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="1954" dy="1345" grid="1" gridSize="5" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -13,7 +13,7 @@
         <mxCell id="nt2b4anpcn0M_4nPq0Y0-12" value="&lt;font style=&quot;font-size: 22px;&quot;&gt;Uygulama Katmanı&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#82b366;fontSize=14;fontStyle=1;verticalAlign=top;arcSize=7;" parent="1" vertex="1">
           <mxGeometry x="440" y="-260" width="760" height="340" as="geometry" />
         </mxCell>
-        <mxCell id="uart_module" value="&lt;b&gt;&lt;font style=&quot;font-size: 22px;&quot;&gt;components/uart&lt;/font&gt;&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=14;fontStyle=1;verticalAlign=top;arcSize=7;" parent="1" vertex="1">
+        <mxCell id="uart_module" value="&lt;b&gt;&lt;font style=&quot;font-size: 22px;&quot;&gt;components/uart&lt;/font&gt;&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=14;fontStyle=1;verticalAlign=top;arcSize=6;" parent="1" vertex="1">
           <mxGeometry x="435" y="95" width="765" height="605" as="geometry" />
         </mxCell>
         <mxCell id="uart_types" value="uart_types.h" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;fontStyle=1;verticalAlign=top;arcSize=6;" parent="1" vertex="1">
@@ -51,7 +51,7 @@
           </mxGeometry>
         </mxCell>
         <mxCell id="arrow_uartc_espidf" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;&lt;b&gt;#include driver/uart.h&lt;/b&gt;&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#9673a6;fontColor=#9673a6;fontStyle=2;fontSize=11;startArrow=classic;startFill=1;endArrow=none;strokeWidth=2;labelBackgroundColor=none;" parent="1" source="uart_c" target="espidf_box" edge="1">
-          <mxGeometry x="-0.3316" y="-15" relative="1" as="geometry">
+          <mxGeometry x="-0.3475" y="-10" relative="1" as="geometry">
             <Array as="points">
               <mxPoint x="820" y="695" />
               <mxPoint x="640" y="695" />
@@ -65,11 +65,10 @@
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="arrow_main_sim" value="&lt;span&gt;&lt;b&gt;&lt;font style=&quot;font-size: 10px;&quot;&gt;fonksiyon pointer&#39;larını bağlar&lt;br&gt;(.write=_wr, .read=_rd, .ctx=h)&lt;/font&gt;&lt;/b&gt;&lt;/span&gt;" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#666666;fontColor=#666666;fontStyle=2;fontSize=12;dashed=1;startArrow=classic;startFill=1;endArrow=none;labelBackgroundColor=none;strokeWidth=2;" parent="1" source="main_box" target="sim800c_box" edge="1">
+        <mxCell id="arrow_main_sim" value="&lt;span&gt;&lt;b&gt;&lt;font style=&quot;font-size: 10px;&quot;&gt;fonksiyon pointer&#39;larını bağlar&lt;br&gt;(.write=_wr, .read=_rd, .ctx=h)&lt;/font&gt;&lt;/b&gt;&lt;/span&gt;" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=-0.001;entryY=0.507;entryDx=0;entryDy=0;strokeColor=#666666;fontColor=#666666;fontStyle=2;fontSize=12;dashed=1;startArrow=classic;startFill=1;endArrow=none;labelBackgroundColor=none;strokeWidth=2;entryPerimeter=0;" parent="1" source="main_box" target="sim800c_box" edge="1">
           <mxGeometry x="-0.0047" y="-16" relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="690" y="-97" />
-              <mxPoint x="850" y="-97" />
+              <mxPoint x="850" y="-96" />
             </Array>
             <mxPoint as="offset" />
           </mxGeometry>

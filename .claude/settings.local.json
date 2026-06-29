@@ -8,7 +8,9 @@
       "Bash(cmake --version)",
       "Bash(xcode-select -p)",
       "Bash(ls \"C:/Users/SOYLU/Desktop/YAZILIM/BOLD_IOT_ornek/BOLD IOT Örnek Çalışmalar ve Kaynaklar/Ses Oynatma Örnekleri ESP32-S3/Sanal Motor Sesi Oynatma/Hiza_Gore_Ses_Kayit/\")",
-      "Read(//c/Users/SOYLU/Desktop/YAZILIM/BOLD_IOT_ornek/BOLD IOT Örnek Çalışmalar ve Kaynaklar/Ses Oynatma Örnekleri ESP32-S3/Sanal Motor Sesi Oynatma/Hiza_Gore_Ses_Kayit/**)"
+      "Read(//c/Users/SOYLU/Desktop/YAZILIM/BOLD_IOT_ornek/BOLD IOT Örnek Çalışmalar ve Kaynaklar/Ses Oynatma Örnekleri ESP32-S3/Sanal Motor Sesi Oynatma/Hiza_Gore_Ses_Kayit/**)",
+      "Bash(ls -la \"C:/Users/SOYLU/Desktop/smartbike_server\")",
+      "Read(//c/Users/SOYLU/Desktop/smartbike_server/**)"
     ]
   }
 }

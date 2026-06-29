@@ -5,6 +5,11 @@
 #include <stdint.h>
 #include <stddef.h>
 
+/*=================== Defines ===================*/
+#define MQTT_MAX_REMAINING_LENGTH       (0xFFFFFFFU)
+#define MQTT_UTF8_STRING_MAX_LEN        (0xFFFFU   )
+
+
 /*=================== Typedef ===================*/
 typedef enum
 {
@@ -12,6 +17,19 @@ typedef enum
     MQTT_OK    =  0,
 }mqtt_return_t;
 
+typedef struct
+{
+    const char     *p_host_ch              ;
+    uint16_t        d_port_u16             ;
+    const char     *p_client_id_ch         ;
+    uint16_t        d_keep_alive_sec_u16   ;
+
+    const char     *p_will_topic_ch        ;
+    const uint8_t  *p_will_payload_u8      ;
+    uint16_t        d_will_payload_len_u16 ;
+    uint8_t         d_will_qos_u8          ;
+    bool            b_will_retain          ;
+}mqtt_config_t;
 
 /*=================== Callback Tipi ===================*/
 typedef void (*mqtt_message_callback_t)(const char *p_topic_ch, const uint8_t *p_payload_u8, size_t d_payload_len);

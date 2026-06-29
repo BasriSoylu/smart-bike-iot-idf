@@ -17,14 +17,75 @@
 #define MQTT_RX_TASK_PRIORITY     (5U    )
 
 
-/* =============== Static Degiskenler =============== */
-static const mqtt_transport_t *fp_transport_st                             = NULL; /* Inject edilen transport */
-static       uint8_t           mqtt_packet_buffer[MQTT_PACKET_BUFFER_SIZE]       ; /* Paket insa tamponu */
+/* ──────────────────────────────────────── Static Degiskenler ──────────────────────────────────────── */
+static const mqtt_transport_t *fp_transport_st                             = NULL;
+static       uint8_t           mqtt_packet_buffer[MQTT_PACKET_BUFFER_SIZE]       ;
 
-/* ─────────── Receiver task icin static state ─────────── */
+/* ───────────────────────────────── Receiver task icin static state ────────────────────────────────── */
 static mqtt_message_callback_t fp_message_callback        = NULL;   /* Kullanici handler'i */
 static TaskHandle_t            mqtt_receiver_task_handle  = NULL;   /* Receiver task handle */
 
+
+/* ───────────────────────────────── Static Fonksiyon Prototipleri ─────────────────────────────────── */
+static int           encode_remaining_length(      uint8_t       *p_buf_u8   ,       uint32_t  d_value_u32 );
+static int           encode_string          (      uint8_t       *p_buf_u8   , const char     *p_str_ch    );
+static mqtt_return_t mqtt_send_connect      (const mqtt_config_t *p_config_st                              );
+
+
+
+
+/* =============== Internal Helpers =============== */
+static int encode_remaining_length(uint8_t *p_buf_u8, uint32_t d_value_u32)
+{
+    int     yazilan_byte_s32 = 0;
+    uint8_t byte_u8             ;
+
+    if ( d_value_u32 <= MQTT_MAX_REMAINING_LENGTH)
+    {
+        do{
+            byte_u8     = (uint8_t)(d_value_u32 % 128U);
+            d_value_u32 = d_value_u32 / 128;
+
+            if( d_value_u32 > 0U)
+            {
+                byte_u8 |= 0x80; 
+            }
+
+            p_buf_u8[yazilan_byte_s32] = byte_u8;
+            yazilan_byte_s32++;
+
+        }while(d_value_u32 > 0U);
+
+    }else   return -1;
+
+    return yazilan_byte_s32;
+}
+
+
+static int encode_string(uint8_t *p_buf_u8, const char *p_str_ch)
+{
+    int    yazilan_byte_s32 = 0;
+    size_t d_str_len_sz        ;
+
+    if ( NULL != p_str_ch )
+    {
+        d_str_len_sz = strlen(p_str_ch);
+
+        if ( d_str_len_sz <= MQTT_UTF8_STRING_MAX_LEN )
+        {
+            p_buf_u8[0] = (uint8_t)(d_str_len_sz >> 8     );
+            p_buf_u8[1] = (uint8_t)(d_str_len_sz &  0xFFU );
+
+            memcpy(&p_buf_u8[2], p_str_ch, d_str_len_sz);
+
+            yazilan_byte_s32 = (int)(2U + d_str_len_sz);
+
+        }else   return -1;
+
+    }else   return -1;
+
+    return yazilan_byte_s32;
+}
 
 
 

@@ -19,7 +19,7 @@ typedef struct {
     int  (*read)    (      uint8_t  *buf  , size_t len, uint32_t timeout_ms);
     void (*log )    (const char     *msg                                   );
     void (*set_baud)(      uint32_t  baud                                  );
-    void (*flush)    (      void                                            );
+    void (*flush)    (      void                                           );
 } sim800c_io_t;
 
 /* ─────────────────── State Machine Durumları ───────────────────── */
