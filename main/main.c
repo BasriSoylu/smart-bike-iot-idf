@@ -19,7 +19,6 @@ static const char *TAG = "MAIN";
 #define SIM800C_RX_BUF_SIZE   (   32768  )
 #define SIM800C_TX_BUF_SIZE   (   1024   )
 
-
 static uart_handle_t g_sim_uart;
 
 /* ─────────────── sim800c_io_t wrapper fonksiyon prototipleri ───────────────── */
@@ -76,9 +75,6 @@ void app_main(void)
 }
 
 
-
-
-
 /* ───────────────────────── main fonksiyonlari  ───────────────────── */
 static void cevresel_ayarla()
 {
@@ -120,6 +116,8 @@ static void cevresel_ayarla()
     mqtt_init(&fp_mqtt_transport_st);
 }
 
+
+
 static void cevresel_baslat()
 {
     if ( 0 != sim800c_baslat() )
@@ -135,6 +133,8 @@ static void cevresel_baslat()
         return;
     }
 }
+
+
 
 static void yazilim_versiyon_kontrol(uint8_t d_komut_u8)
 {
@@ -232,7 +232,6 @@ static void mqtt_test()
     }
 
     mqtt_start_receiver();
-    /* ─────────────────────────────────────────────── */
 
     gps_veri_paketi_st.devices_id_u32  = 42        ;
     gps_veri_paketi_st.gps_altitute_f  = 120.5f    ;
@@ -284,7 +283,7 @@ static void mqtt_message_handler(   const   char    *p_topic_ch   ,
     cJSON *p_json_st        = NULL;
     cJSON *p_kontrol_st     = NULL;
 
-        ESP_LOGI(TAG, "══════════════════════════════════════════════════════════════════════════════════════════════");
+    ESP_LOGI(TAG, "══════════════════════════════════════════════════════════════════════════════════════════════");
     ESP_LOGI(TAG, ">>> MQTT MESAJ GELDI <<<");
     ESP_LOGI(TAG, "Topic   : %s"     , p_topic_ch);
     ESP_LOGI(TAG, "Payload : %.*s"   , (int)d_payload_len, (const char *)p_payload_u8);

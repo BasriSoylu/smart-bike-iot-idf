@@ -270,14 +270,14 @@ mqtt_return_t mqtt_publish(const char *p_topic_ch, const uint8_t *p_payload_u8, 
 
 mqtt_return_t mqtt_subscribe(const char *p_topic_ch, uint8_t d_qos_u8)
 {
-    static  uint16_t      d_next_packet_id_u16    = 1U        ;
-            mqtt_return_t mqtt_return_et          = MQTT_ERROR;
-            uint16_t      d_topic_length_u16      = 0         ;
-            uint16_t      d_remaining_length_u16  = 0         ;
-            uint16_t      d_pkt_index_u16         = 0         ;
-            uint16_t      d_pkt_id_u16            = 0         ;
-            uint8_t       subscribe_ack_buffer_au8[5] = {0}   ;
-            int           d_recive_count_i        = 0         ;
+    static  uint16_t      d_next_packet_id_u16        = 1U        ;
+            mqtt_return_t mqtt_return_et              = MQTT_ERROR;
+            uint16_t      d_topic_length_u16          = 0         ;
+            uint16_t      d_remaining_length_u16      = 0         ;
+            uint16_t      d_pkt_index_u16             = 0         ;
+            uint16_t      d_pkt_id_u16                = 0         ;
+            uint8_t       subscribe_ack_buffer_au8[5] = {0}       ;
+            int           d_recive_count_i            = 0         ;
 
     if( (NULL != fp_transport_st) && (NULL != p_topic_ch) && (d_qos_u8 <= 2) )
     {

@@ -28,7 +28,7 @@ typedef struct
     const uint8_t  *p_will_payload_u8      ;
     uint16_t        d_will_payload_len_u16 ;
     uint8_t         d_will_qos_u8          ;
-    bool            b_will_retain          ;
+    uint8_t         b_will_retain          ;
 }mqtt_config_t;
 
 /*=================== Callback Tipi ===================*/
