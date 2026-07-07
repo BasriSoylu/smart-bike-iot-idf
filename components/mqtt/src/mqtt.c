@@ -26,15 +26,22 @@ static       uint8_t           mqtt_packet_buffer[MQTT_PACKET_BUFFER_SIZE]      
 static mqtt_message_callback_t fp_message_callback        = NULL;   /* Kullanici handler'i */
 static TaskHandle_t            mqtt_receiver_task_handle  = NULL;   /* Receiver task handle */
 
-
-/* ───────────────────────────────── Static Fonksiyon Prototipleri ─────────────────────────────────── */
-static int encode_remaining_length(uint8_t *p_buf_u8 ,       uint32_t            d_value_u32 );
-static int encode_string          (uint8_t *p_buf_u8 , const char               *p_str_ch    );
-static int encode_connect_packet  (uint8_t *p_buf_u8 , const connect_packet_t   *p_pkt_st    );
-static int encode_publish_packet  (uint8_t *p_buf_u8 , const publish_packet_t   *p_pkt_st    );
-static int encode_subscribe_packet(uint8_t *p_buf_u8 , const subscribe_packet_t *p_pkt_st    );
-
-
+/* ============================================================================================================ */
+/* ================================= Static Fonksiyon Prototipleri ============================================ */
+/* ============================================================================================================ */
+/* ───────────────────────────────── Encode Fonksiyon Prototipleri ─────────────────────────────────── */ /* || */ 
+static int encode_remaining_length  (      uint8_t *p_buf_u8 ,       uint32_t              d_value_u32 ); /* || */ 
+static int encode_string            (      uint8_t *p_buf_u8 , const char                 *p_str_ch    ); /* || */ 
+static int encode_connect_packet    (      uint8_t *p_buf_u8 , const connect_packet_t     *p_pkt_st    ); /* || */ 
+static int encode_publish_packet    (      uint8_t *p_buf_u8 , const publish_packet_t     *p_pkt_st    ); /* || */ 
+static int encode_subscribe_packet  (      uint8_t *p_buf_u8 , const subscribe_packet_t   *p_pkt_st    ); /* || */ 
+static int encode_unsubscribe_packet(      uint8_t *p_buf_u8 , const unsubscribe_packet_t *p_pkt_st    ); /* || */ 
+static int encode_ack_packet        (      uint8_t *p_buf_u8 , const ack_packet_t         *p_pkt_st    ); /* || */ 
+static int encode_control_packet    (      uint8_t *p_buf_u8 , const control_packet_t     *p_pkt_st    ); /* || */ 
+/* ───────────────────────────────── Decode Fonksiyon Prototipleri ─────────────────────────────────── */ /* || */
+static int decode_remaining_length  (const uint8_t *p_buf_u8 ,       uint32_t             *p_value_u32 ); /* || */
+                                                                                                          /* || */
+/* ============================================================================================================ */
 
 /* =============== Internal Helpers =============== */
 static int encode_remaining_length(uint8_t *p_buf_u8, uint32_t d_value_u32)
@@ -62,7 +69,6 @@ static int encode_remaining_length(uint8_t *p_buf_u8, uint32_t d_value_u32)
 
     return yazilan_byte_s32;
 }
-
 
 static int encode_string(uint8_t *p_buf_u8, const char *p_str_ch)
 {
@@ -100,22 +106,22 @@ static int encode_connect_packet(uint8_t *p_buf_u8, const connect_packet_t *p_pk
         d_idx_i = 0;
 
         /* TODO 1: remaining_length hesabı            */
-        d_remaining_length_u32 = (MQTT_VARIABLE_HEADER_SABIT_KISMIN_UZUNLUGU + 2U + strlen(p_pkt_st->payload_st.p_client_id_ch) );
+        d_remaining_length_u32 = (MQTT_VARIABLE_HEADER_SABIT_KISMIN_UZUNLUGU + MQTT_STRING_LEN_ALANI_UZUNLUGU + strlen(p_pkt_st->payload_st.p_client_id_ch) );
 
         if(NULL != p_pkt_st->payload_st.p_will_topic_ch)
         {
-            d_remaining_length_u32 += ( 2U + (uint32_t)strlen(p_pkt_st->payload_st.p_will_topic_ch) ); 
-            d_remaining_length_u32 += ( 2U + p_pkt_st->payload_st.d_will_payload_len_u16 ); 
+            d_remaining_length_u32 += ( MQTT_STRING_LEN_ALANI_UZUNLUGU + (uint32_t)strlen(p_pkt_st->payload_st.p_will_topic_ch) ); 
+            d_remaining_length_u32 += ( MQTT_STRING_LEN_ALANI_UZUNLUGU + p_pkt_st->payload_st.d_will_payload_len_u16 ); 
         }
 
         if(NULL != p_pkt_st->payload_st.p_username_ch)
         {
-            d_remaining_length_u32 += ( 2U + (uint32_t)strlen(p_pkt_st->payload_st.p_username_ch) );
+            d_remaining_length_u32 += ( MQTT_STRING_LEN_ALANI_UZUNLUGU + (uint32_t)strlen(p_pkt_st->payload_st.p_username_ch) );
         }
 
         if(NULL != p_pkt_st->payload_st.p_password_ch)
         {
-            d_remaining_length_u32 += ( 2U + (uint32_t)strlen(p_pkt_st->payload_st.p_password_ch) );
+            d_remaining_length_u32 += ( MQTT_STRING_LEN_ALANI_UZUNLUGU + (uint32_t)strlen(p_pkt_st->payload_st.p_password_ch) );
         }
 
         /* TODO 2: Control byte yaz                   */
@@ -128,8 +134,8 @@ static int encode_connect_packet(uint8_t *p_buf_u8, const connect_packet_t *p_pk
         p_buf_u8[d_idx_i++] = (uint8_t)(p_pkt_st->var_header_st.d_protocol_name_len_u16 >> 8    );
         p_buf_u8[d_idx_i++] = (uint8_t)(p_pkt_st->var_header_st.d_protocol_name_len_u16 & 0xFFU );
 
-        memcpy(&p_buf_u8[d_idx_i], p_pkt_st->var_header_st.protocol_name_ch, 4U);
-        d_idx_i += 4;
+        memcpy(&p_buf_u8[d_idx_i], p_pkt_st->var_header_st.protocol_name_ch, MQTT_PROTOCOL_NAME_UZUNLUGU);
+        d_idx_i += MQTT_PROTOCOL_NAME_UZUNLUGU;
 
         p_buf_u8[d_idx_i++] = p_pkt_st->var_header_st.d_protocol_level_u8;
         p_buf_u8[d_idx_i++] = p_pkt_st->var_header_st.flags_st.connect_flags_ut.byte_u8;
@@ -167,7 +173,6 @@ static int encode_connect_packet(uint8_t *p_buf_u8, const connect_packet_t *p_pk
     return d_idx_i;
 }
 
-
 static int encode_publish_packet(uint8_t *p_buf_u8, const publish_packet_t *p_pkt_st)
 {
     int             d_idx_i                 = -1;
@@ -181,10 +186,10 @@ static int encode_publish_packet(uint8_t *p_buf_u8, const publish_packet_t *p_pk
         pflags_st.value_u8 = p_pkt_st->fixed_header_st.control_byte_ut.bits_st.flags;
 
         /* TODO 1: remaining_length hesabı */
-        d_remaining_length_u32 = 2U + (uint32_t)strlen(p_pkt_st->var_header_st.p_topic_ch);
+        d_remaining_length_u32 = MQTT_STRING_LEN_ALANI_UZUNLUGU  + (uint32_t)strlen(p_pkt_st->var_header_st.p_topic_ch);
         if( pflags_st.bits_st.qos  > 0U)
         {
-            d_remaining_length_u32 += 2;
+            d_remaining_length_u32 += MQTT_PACKET_ID_UZUNLUGU;
         }
         d_remaining_length_u32 += p_pkt_st->payload_st.d_payload_len_u16;
 
@@ -223,20 +228,137 @@ static int encode_subscribe_packet(uint8_t *p_buf_u8, const subscribe_packet_t *
         d_idx_i = 0;
 
         /* TODO 1: remaining_length hesabı */
-        d_remaining_length_u32 = 2
+        d_remaining_length_u32 =    MQTT_PACKET_ID_UZUNLUGU          + 
+                                    MQTT_STRING_LEN_ALANI_UZUNLUGU   + 
+                                    MQTT_SUBSCRIBE_QOS_BYTE_UZUNLUGU + 
+                                    (uint32_t)strlen(p_pkt_st->topic_filter_st.p_topic_ch);
 
         /* TODO 2: Control byte yaz */
+        p_buf_u8[d_idx_i++] = p_pkt_st->fixed_header_st.control_byte_ut.byte_u8;
+
         /* TODO 3: Remaining length yaz (VLE) */
+        d_idx_i += encode_remaining_length(&p_buf_u8[d_idx_i], d_remaining_length_u32);
+
         /* TODO 4: Packet ID yaz (HER ZAMAN var, PUBLISH'ten farkı) */
+        p_buf_u8[d_idx_i++] = (uint8_t)( (p_pkt_st->d_packet_id_u16 >> 8) & 0xFF ); 
+        p_buf_u8[d_idx_i++] = (uint8_t)( (p_pkt_st->d_packet_id_u16     ) & 0xFF );
+
         /* TODO 5: Topic filter yaz (encode_string) */
+        d_idx_i += encode_string(&p_buf_u8[d_idx_i], p_pkt_st->topic_filter_st.p_topic_ch);
+
         /* TODO 6: QoS byte yaz */
+        p_buf_u8[d_idx_i++] = p_pkt_st->topic_filter_st.d_qos_u8;
     }
 
     return d_idx_i;
 }
 
+static int encode_unsubscribe_packet(uint8_t *p_buf_u8, const unsubscribe_packet_t *p_pkt_st)
+{
+    int      d_idx_i             = -1;
+    uint32_t d_remaining_length_u32  ;
 
+    if ( (NULL != p_buf_u8) && (NULL != p_pkt_st) )
+    {
+        d_idx_i = 0;
 
+        /* TODO 1: remaining_length hesabı */
+        d_remaining_length_u32 = MQTT_PACKET_ID_UZUNLUGU + MQTT_STRING_LEN_ALANI_UZUNLUGU + (uint32_t)strlen(p_pkt_st->p_topic_ch);
+
+        /* TODO 2: Control byte yaz */
+        p_buf_u8[d_idx_i++] = p_pkt_st->fixed_header_st.control_byte_ut.byte_u8;
+
+        /* TODO 3: Remaining length yaz (VLE) */
+        d_idx_i += encode_remaining_length(&p_buf_u8[d_idx_i], d_remaining_length_u32);
+
+        /* TODO 4: Packet ID yaz (HER ZAMAN var) */
+        p_buf_u8[d_idx_i++] = (uint8_t)( (p_pkt_st->d_packet_id_u16 >> 8) & 0xFF ); 
+        p_buf_u8[d_idx_i++] = (uint8_t)( (p_pkt_st->d_packet_id_u16     ) & 0xFF );
+
+        /* TODO 5: Topic yaz (encode_string) */
+        d_idx_i += encode_string(&p_buf_u8[d_idx_i], p_pkt_st->p_topic_ch);
+
+    }
+
+    return d_idx_i;
+}
+
+static int encode_ack_packet(uint8_t *p_buf_u8, const ack_packet_t *p_pkt_st)
+{
+    int d_idx_i = -1;
+
+    if ( (NULL != p_buf_u8) && (NULL != p_pkt_st) )
+    {
+        d_idx_i = 0;
+
+        /* TODO 1: Control byte yaz */
+        p_buf_u8[d_idx_i++] = p_pkt_st->fixed_header_st.control_byte_ut.byte_u8;
+
+        /* TODO 2: Remaining length yaz (VLE) — her zaman = MQTT_PACKET_ID_UZUNLUGU */
+        d_idx_i += encode_remaining_length(&p_buf_u8[d_idx_i], MQTT_PACKET_ID_UZUNLUGU);
+
+        /* TODO 3: Packet ID yaz */
+        p_buf_u8[d_idx_i++] = (uint8_t)( (p_pkt_st->d_packet_id_u16 >> 8) & 0xFF ); 
+        p_buf_u8[d_idx_i++] = (uint8_t)( (p_pkt_st->d_packet_id_u16     ) & 0xFF );
+    }
+
+    return d_idx_i;
+}
+
+static int encode_control_packet(uint8_t *p_buf_u8, const control_packet_t *p_pkt_st)
+{
+    int d_idx_i = -1;
+
+    if ( (NULL != p_buf_u8) && (NULL != p_pkt_st) )
+    {
+        d_idx_i = 0;
+
+        /* TODO 1: Control byte yaz */
+        p_buf_u8[d_idx_i++] = p_pkt_st->fixed_header_st.control_byte_ut.byte_u8;
+
+        /* TODO 2: Remaining length yaz — her zaman 0 */
+        d_idx_i += encode_remaining_length(&p_buf_u8[d_idx_i], 0U);
+    }
+
+    return d_idx_i;
+}
+
+static int decode_remaining_length(const uint8_t *p_buf_u8, uint32_t *p_value_u32)
+{
+    int      d_idx_i        = -1;
+    uint32_t d_multiplier_u32   ;
+    uint32_t d_value_u32        ;
+    uint8_t  byte_u8            ;
+
+    if ( (NULL != p_buf_u8) && (NULL != p_value_u32) )
+    {
+        d_idx_i        = 0;
+        d_multiplier_u32 = 1U;
+        d_value_u32      = 0U;
+
+        /* TODO 1: do-while döngüsü ile byte'ları oku ve değeri hesapla */
+        do
+        {
+            byte_u8 = p_buf_u8[d_idx_i];
+
+            d_value_u32 += (uint32_t)(byte_u8 & 0x7FU) * d_multiplier_u32;
+            d_multiplier_u32 *= 128U;
+
+            d_idx_i++;
+
+            if ( d_multiplier_u32 > (128U * 128U * 128U) )
+            {
+                return -1;   /* 4 byte'tan fazla, malformed */
+            }
+        }
+        while ( 0U != (byte_u8 & 0x80U) );
+
+        /* TODO 2: p_value_u32'ye sonucu yaz */
+        *p_value_u32 = d_value_u32;
+    }
+
+    return d_idx_i;
+}
 
 
 

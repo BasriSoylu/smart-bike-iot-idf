@@ -10,6 +10,10 @@
 #define MQTT_UTF8_STRING_MAX_LEN                     (0xFFFFU   )
 #define MQTT_VARIABLE_HEADER_SABIT_KISMIN_UZUNLUGU   (10U       )           // protocol name 6 + level 1 + flags 1 + keep_alive 2
 
+#define MQTT_PACKET_ID_UZUNLUGU                      (2U        )           // Packet ID alani (MSB+LSB)
+#define MQTT_STRING_LEN_ALANI_UZUNLUGU               (2U        )           // UTF-8 string uzunluk alani (encode_string'in yazdigi ilk 2 byte)
+#define MQTT_SUBSCRIBE_QOS_BYTE_UZUNLUGU             (1U        )           // SUBSCRIBE topic filter sonundaki requested QoS byte
+#define MQTT_PROTOCOL_NAME_UZUNLUGU                  (4U        )           
 
 /*=================== Typedef ===================*/
 typedef enum
