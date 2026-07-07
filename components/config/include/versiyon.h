@@ -5,12 +5,26 @@
  *================================================================*/
 #define YAZILIM_VERSIYON_MAJOR  1
 #define YAZILIM_VERSIYON_MINOR  5
-#define YAZILIM_VERSIYON_PATCH  11
-#define YAZILIM_VERSIYON        "1.5.11"
+#define YAZILIM_VERSIYON_PATCH  12
+#define YAZILIM_VERSIYON        "1.5.12"
 
 /*================================================================
  * VERSIYON GECMISI - en yeni ustte
  *================================================================*/
+
+
+/*******************************************************************
+ * Versiyon       : v1.5.12
+ * Branch         : main
+ * Kullanilan SDK : ESP-IDF v5.5
+ * Kullanilan IDE : Visual Studio Code
+ *=================================================================
+* Yazar           : Hasan Basri SOYLU
+* Tarih           : 07.07.2026
+*==================================================================
+* Aciklama        : MQTT gelistirmeleri devam etmektedir. 
+*                   Derlenmeyecek versiyon numarasidir.
+*******************************************************************/
 
 
 /*******************************************************************

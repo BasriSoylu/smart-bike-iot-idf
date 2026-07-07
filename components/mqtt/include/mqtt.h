@@ -6,8 +6,9 @@
 #include <stddef.h>
 
 /*=================== Defines ===================*/
-#define MQTT_MAX_REMAINING_LENGTH       (0xFFFFFFFU)
-#define MQTT_UTF8_STRING_MAX_LEN        (0xFFFFU   )
+#define MQTT_MAX_REMAINING_LENGTH                    (0xFFFFFFFU)
+#define MQTT_UTF8_STRING_MAX_LEN                     (0xFFFFU   )
+#define MQTT_VARIABLE_HEADER_SABIT_KISMIN_UZUNLUGU   (10U       )           // protocol name 6 + level 1 + flags 1 + keep_alive 2
 
 
 /*=================== Typedef ===================*/

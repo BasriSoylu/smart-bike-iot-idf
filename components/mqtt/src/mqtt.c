@@ -1,9 +1,10 @@
 #include <string.h>
 #include <stdio.h>
-#include "mqtt.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_log.h"
+#include "mqtt.h"
+#include "mqtt_pkt.h"
 
 /* =============== Sabitler =============== */
 #define MQTT_TAG                  "MQTT"
@@ -27,10 +28,11 @@ static TaskHandle_t            mqtt_receiver_task_handle  = NULL;   /* Receiver 
 
 
 /* ───────────────────────────────── Static Fonksiyon Prototipleri ─────────────────────────────────── */
-static int           encode_remaining_length(      uint8_t       *p_buf_u8   ,       uint32_t  d_value_u32 );
-static int           encode_string          (      uint8_t       *p_buf_u8   , const char     *p_str_ch    );
-static mqtt_return_t mqtt_send_connect      (const mqtt_config_t *p_config_st                              );
-
+static int encode_remaining_length(uint8_t *p_buf_u8 ,       uint32_t            d_value_u32 );
+static int encode_string          (uint8_t *p_buf_u8 , const char               *p_str_ch    );
+static int encode_connect_packet  (uint8_t *p_buf_u8 , const connect_packet_t   *p_pkt_st    );
+static int encode_publish_packet  (uint8_t *p_buf_u8 , const publish_packet_t   *p_pkt_st    );
+static int encode_subscribe_packet(uint8_t *p_buf_u8 , const subscribe_packet_t *p_pkt_st    );
 
 
 
@@ -86,6 +88,156 @@ static int encode_string(uint8_t *p_buf_u8, const char *p_str_ch)
 
     return yazilan_byte_s32;
 }
+
+static int encode_connect_packet(uint8_t *p_buf_u8, const connect_packet_t *p_pkt_st)
+{
+    int      d_idx_i             = -1 ;
+    uint32_t d_remaining_length_u32   ;
+
+    /* Guard: NULL kontrol */
+    if ( (NULL != p_buf_u8) && (NULL != p_pkt_st) )
+    {
+        d_idx_i = 0;
+
+        /* TODO 1: remaining_length hesabı            */
+        d_remaining_length_u32 = (MQTT_VARIABLE_HEADER_SABIT_KISMIN_UZUNLUGU + 2U + strlen(p_pkt_st->payload_st.p_client_id_ch) );
+
+        if(NULL != p_pkt_st->payload_st.p_will_topic_ch)
+        {
+            d_remaining_length_u32 += ( 2U + (uint32_t)strlen(p_pkt_st->payload_st.p_will_topic_ch) ); 
+            d_remaining_length_u32 += ( 2U + p_pkt_st->payload_st.d_will_payload_len_u16 ); 
+        }
+
+        if(NULL != p_pkt_st->payload_st.p_username_ch)
+        {
+            d_remaining_length_u32 += ( 2U + (uint32_t)strlen(p_pkt_st->payload_st.p_username_ch) );
+        }
+
+        if(NULL != p_pkt_st->payload_st.p_password_ch)
+        {
+            d_remaining_length_u32 += ( 2U + (uint32_t)strlen(p_pkt_st->payload_st.p_password_ch) );
+        }
+
+        /* TODO 2: Control byte yaz                   */
+        p_buf_u8[d_idx_i++] = p_pkt_st->fixed_header_st.control_byte_ut.byte_u8;
+        
+        /* TODO 3: Remaining length yaz (VLE)         */
+        d_idx_i += encode_remaining_length(&p_buf_u8[d_idx_i], d_remaining_length_u32);
+
+        /* TODO 4: Variable header yaz                */
+        p_buf_u8[d_idx_i++] = (uint8_t)(p_pkt_st->var_header_st.d_protocol_name_len_u16 >> 8    );
+        p_buf_u8[d_idx_i++] = (uint8_t)(p_pkt_st->var_header_st.d_protocol_name_len_u16 & 0xFFU );
+
+        memcpy(&p_buf_u8[d_idx_i], p_pkt_st->var_header_st.protocol_name_ch, 4U);
+        d_idx_i += 4;
+
+        p_buf_u8[d_idx_i++] = p_pkt_st->var_header_st.d_protocol_level_u8;
+        p_buf_u8[d_idx_i++] = p_pkt_st->var_header_st.flags_st.connect_flags_ut.byte_u8;
+
+        p_buf_u8[d_idx_i++] = (uint8_t)(p_pkt_st->var_header_st.d_keep_alive_u16 >> 8   );
+        p_buf_u8[d_idx_i++] = (uint8_t)(p_pkt_st->var_header_st.d_keep_alive_u16 & 0xFFU);
+
+        /* TODO 5: Payload — Client ID                */
+        d_idx_i += encode_string(&p_buf_u8[d_idx_i], p_pkt_st->payload_st.p_client_id_ch);
+
+        /* TODO 6: Payload — LWT (varsa)              */
+        if ( NULL != p_pkt_st->payload_st.p_will_topic_ch )
+        {
+            d_idx_i += encode_string(&p_buf_u8[d_idx_i], p_pkt_st->payload_st.p_will_topic_ch);
+
+            p_buf_u8[d_idx_i++] = (uint8_t)(p_pkt_st->payload_st.d_will_payload_len_u16 >> 8   );
+            p_buf_u8[d_idx_i++] = (uint8_t)(p_pkt_st->payload_st.d_will_payload_len_u16 & 0xFFU);
+
+            memcpy(&p_buf_u8[d_idx_i], p_pkt_st->payload_st.p_will_payload_u8, p_pkt_st->payload_st.d_will_payload_len_u16);
+            d_idx_i += p_pkt_st->payload_st.d_will_payload_len_u16;
+        }
+
+        /* TODO 7: Payload — Username/Password (varsa)*/
+        if ( NULL != p_pkt_st->payload_st.p_username_ch )
+        {
+            d_idx_i += encode_string(&p_buf_u8[d_idx_i], p_pkt_st->payload_st.p_username_ch);
+        }
+
+        if ( NULL != p_pkt_st->payload_st.p_password_ch )
+        {
+            d_idx_i += encode_string(&p_buf_u8[d_idx_i], p_pkt_st->payload_st.p_password_ch);
+        }
+    }
+
+    return d_idx_i;
+}
+
+
+static int encode_publish_packet(uint8_t *p_buf_u8, const publish_packet_t *p_pkt_st)
+{
+    int             d_idx_i                 = -1;
+    uint32_t        d_remaining_length_u32      ;
+    publish_flags_t pflags_st                   ;
+
+    if( (NULL != p_buf_u8) && (NULL != p_pkt_st) )
+    {
+        d_idx_i = 0;
+    
+        pflags_st.value_u8 = p_pkt_st->fixed_header_st.control_byte_ut.bits_st.flags;
+
+        /* TODO 1: remaining_length hesabı */
+        d_remaining_length_u32 = 2U + (uint32_t)strlen(p_pkt_st->var_header_st.p_topic_ch);
+        if( pflags_st.bits_st.qos  > 0U)
+        {
+            d_remaining_length_u32 += 2;
+        }
+        d_remaining_length_u32 += p_pkt_st->payload_st.d_payload_len_u16;
+
+        /* TODO 2: Control byte yaz */
+        p_buf_u8[d_idx_i++] = p_pkt_st->fixed_header_st.control_byte_ut.byte_u8;
+
+        /* TODO 3: Remaining length yaz (VLE) */
+        d_idx_i += encode_remaining_length(&p_buf_u8[d_idx_i], d_remaining_length_u32);
+
+        /* TODO 4: Topic yaz (encode_string) */
+        d_idx_i += encode_string(&p_buf_u8[d_idx_i], p_pkt_st->var_header_st.p_topic_ch);
+
+        /* TODO 5: Packet ID yaz (SADECE QoS > 0 ise) */
+        if( pflags_st.bits_st.qos > 0U)
+        {
+            p_buf_u8[d_idx_i++] = (uint8_t)(p_pkt_st->var_header_st.d_packet_id_u16 >> 8   );
+            p_buf_u8[d_idx_i++] = (uint8_t)(p_pkt_st->var_header_st.d_packet_id_u16 & 0xFFU);
+        }
+
+        /* TODO 6: Payload yaz (memcpy) */
+        memcpy(&p_buf_u8[d_idx_i], p_pkt_st->payload_st.p_payload_u8, p_pkt_st->payload_st.d_payload_len_u16);
+        d_idx_i += p_pkt_st->payload_st.d_payload_len_u16;
+
+    }
+
+    return d_idx_i;
+}
+
+static int encode_subscribe_packet(uint8_t *p_buf_u8, const subscribe_packet_t *p_pkt_st)
+{
+    int      d_idx_i                = -1;
+    uint32_t d_remaining_length_u32     ;
+
+    if( (NULL != p_buf_u8) && (NULL != p_pkt_st) )
+    {
+        d_idx_i = 0;
+
+        /* TODO 1: remaining_length hesabı */
+        d_remaining_length_u32 = 2
+
+        /* TODO 2: Control byte yaz */
+        /* TODO 3: Remaining length yaz (VLE) */
+        /* TODO 4: Packet ID yaz (HER ZAMAN var, PUBLISH'ten farkı) */
+        /* TODO 5: Topic filter yaz (encode_string) */
+        /* TODO 6: QoS byte yaz */
+    }
+
+    return d_idx_i;
+}
+
+
+
+
 
 
 
