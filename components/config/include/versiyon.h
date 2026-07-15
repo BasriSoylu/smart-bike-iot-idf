@@ -4,13 +4,29 @@
  * AKTIF VERSIYON
  *================================================================*/
 #define YAZILIM_VERSIYON_MAJOR  1
-#define YAZILIM_VERSIYON_MINOR  5
-#define YAZILIM_VERSIYON_PATCH  13
-#define YAZILIM_VERSIYON        "1.5.13"
+#define YAZILIM_VERSIYON_MINOR  6
+#define YAZILIM_VERSIYON_PATCH  0
+#define YAZILIM_VERSIYON        "1.6.0"
 
 /*================================================================
- * VERSIYON GECMISI - en yeni ustte
+ * VERSIYON GECMISI - En Yeni Ustte
  *================================================================*/
+
+
+/*******************************************************************
+ * Versiyon       : v1.6.0
+ * Branch         : main
+ * Kullanilan SDK : ESP-IDF v5.5
+ * Kullanilan IDE : Visual Studio Code
+ *=================================================================
+* Yazar           : Hasan Basri SOYLU
+* Tarih           : 15.07.2026
+*==================================================================
+* Aciklama        : MQTT kutuphanesi sub modül olmustur.
+*                   Versiyon düzeltmeleri ile mqtt ye eklemeler 
+*                   olacaktir.
+*******************************************************************/
+
 
 
 /*******************************************************************

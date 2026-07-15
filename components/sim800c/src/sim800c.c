@@ -246,7 +246,7 @@ static void urc_ipd_isle(const char *line)
     {
         sim_rx_kalan = (uint32_t)beklenen_len;
         sim_rx_modu  = SIM_RX_TCP_BINARY;
-        sim800c_logf("TCP binary mod (+IPD): %d byte bekleniyor\n", beklenen_len);
+        sim800c_logf("TCP binary mod (+IPD): %d byte bekleniyor", beklenen_len);
     }
 }
 

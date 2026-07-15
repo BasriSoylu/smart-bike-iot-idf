@@ -1,0 +1,79 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/26.0.9 Chrome/128.0.6613.186 Electron/32.2.5 Safari/537.36" version="26.0.9">
+  <diagram id="mqtt-tek-okuyucu-v1" name="mqtt_okuyucu_task">
+    <mxGraphModel dx="1077" dy="632" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="950" pageHeight="880" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="start" value="mqtt_okuyucu_task&lt;br&gt;(sonsuz dongu)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="300" y="40" width="240" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="recv" value="Paket bekle&lt;br&gt;receive_packet (1 sn)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#000000;fontSize=12;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="300" y="130" width="240" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="dPub" value="Gelen paket&lt;br&gt;PUBLISH mi?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#000000;fontSize=12;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="320" y="240" width="200" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="parse" value="Paketi coz&lt;br&gt;topic + payload ayikla" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#000000;fontSize=12;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="300" y="380" width="240" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="cb" value="Callback cagir&lt;br&gt;mesaji uygulamaya teslim et" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#000000;fontSize=12;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="300" y="460" width="240" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="dQos" value="Mesaj&lt;br&gt;QoS 1 mi?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#000000;fontSize=12;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="320" y="570" width="200" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="puback" value="PUBACK gonder&lt;br&gt;brokera &quot;mesaji aldim&quot; de" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#000000;fontSize=12;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="300" y="700" width="240" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ack" value="ACK paketini kuyruga koy&lt;br&gt;xQueueSend&lt;br&gt;(bekleyen mqtt_do_* alacak)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#000000;fontSize=12;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="660" y="250" width="240" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="eStart" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0" parent="1" source="start" target="recv" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eRecvPub" value="paket geldi" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;fontSize=10" parent="1" source="recv" target="dPub" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eEvet" value="EVET" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;fontSize=10;fontStyle=1" parent="1" source="dPub" target="parse" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eParseCb" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0" parent="1" source="parse" target="cb" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eCbQos" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0" parent="1" source="cb" target="dQos" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eQosEvet" value="EVET" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;fontSize=10;fontStyle=1" parent="1" source="dQos" target="puback" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eHayirAck" value="HAYIR (ACK paketi)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;fontSize=10;fontStyle=1" parent="1" source="dPub" target="ack" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eR1" value="Başa Dön" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.5;exitY=1;entryX=0;entryY=0.33;fontSize=10" parent="1" source="puback" target="recv" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="420" y="790" />
+              <mxPoint x="150" y="790" />
+              <mxPoint x="150" y="150" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="eR2" value="HAYIR" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0;exitY=0.5;entryX=0;entryY=0.67;fontSize=10;fontStyle=1" parent="1" source="dQos" target="recv" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="200" y="610" />
+              <mxPoint x="200" y="170" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="eR3" value="Başa Dön" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.5;exitY=0;entryX=1;entryY=0.5;fontSize=10" parent="1" source="ack" target="recv" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="740" y="160" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

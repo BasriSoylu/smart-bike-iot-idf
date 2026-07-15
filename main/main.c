@@ -19,7 +19,18 @@ static const char *TAG = "MAIN";
 #define SIM800C_RX_BUF_SIZE   (   32768  )
 #define SIM800C_TX_BUF_SIZE   (   1024   )
 
-static uart_handle_t g_sim_uart;
+static volatile uint8_t       yazilim_kontrol_flag_u8 = 0U;
+static          uart_handle_t g_sim_uart                  ;
+
+/* ──────────────────── Test GPS veri paketi (eski test duzeni) ────────────────── */
+typedef struct
+{
+    uint32_t devices_id_u32 ;
+    float    gps_altitute_f ;
+    float    gps_latitute_f ;
+    float    gps_longitute_f;
+}gps_veri_paketi_t;
+static gps_veri_paketi_t gps_veri_paketi_st;
 
 /* ─────────────── sim800c_io_t wrapper fonksiyon prototipleri ───────────────── */
 static void sim_send    (const uint8_t *data, size_t len                     );
@@ -39,38 +50,88 @@ static void mqtt_log_wrapper      (const char    *msg                           
 static void cevresel_ayarla         ();
 static void cevresel_baslat         ();
 static void yazilim_versiyon_kontrol(uint8_t d_komut_u8);
-static void mqtt_test               ();
-static void mqtt_message_handler    (const char *p_topic_ch, const uint8_t *p_payload_u8, size_t d_payload_len);
-
-
-/* ──────────────────── Main Struct Yapilari ────────────────── */
-typedef struct
-{
-    uint32_t devices_id_u32 ;
-    float    gps_altitute_f ;
-    float    gps_latitute_f ;
-    float    gps_longitute_f;
-}gps_veri_paketi_t;
-gps_veri_paketi_t gps_veri_paketi_st;
-
-static volatile uint8_t yazilim_kontrol_flag_u8 = 0U; /* 0 = beklenmiyor, 1/2/3 = MQTT'den gelen komut */
+static void yazilim_kontrol_handler (const uint8_t *p_payload_u8, uint16_t d_payload_len_u16);
 
 void app_main(void)
 {
+    static const mqtt_config_t mqtt_konfig_st =
+    {
+        .p_host_ch            = "broker.hivemq.com",
+        .d_port_u16           = 1883U              ,
+        .p_client_id_ch       = "esp32_bold"       ,
+        .d_keep_alive_sec_u16 = 300U               ,   /* 4E oto-ping gelene kadar comert */
+        .p_will_topic_ch      = NULL               ,   /* LWT ilk teste girmiyor */
+    };
+
+    uint32_t d_sayac_u32      = 0U;
+    char     json_payload[128]    ;
+    int      json_len             ;
+
     cevresel_ayarla();
 
-    cevresel_baslat();
+    cevresel_baslat();   /* GSM + GPRS burada ayaga kalkiyor — MQTT ancak bundan SONRA baslayabilir */
 
-    //yazilim_versiyon_kontrol();
+    if( MQTT_OK == mqtt_start(&mqtt_konfig_st) )
+    {
+        ESP_LOGI(TAG, ">>> MQTT baglandi <<<");
 
-    mqtt_test();
+        if( MQTT_OK != mqtt_subscribe("hbs_smart_bike_2026_xyz123/komut", 1U, yazilim_kontrol_handler) )
+        {
+            ESP_LOGE(TAG, "MQTT subscribe basarisiz!");
+        }
+    }
+    else
+    {
+        ESP_LOGE(TAG, "MQTT start basarisiz!");
+    }
 
     ESP_LOGI(TAG, "Firmware v%s basliyor...", YAZILIM_VERSIYON);
+
+    gps_veri_paketi_st.devices_id_u32  = 42        ;
+    gps_veri_paketi_st.gps_altitute_f  = 120.5f    ;
+    gps_veri_paketi_st.gps_latitute_f  = 41.0082f  ;
+    gps_veri_paketi_st.gps_longitute_f = 28.9784f  ;
 
     while(true)
     {
         vTaskDelay(pdMS_TO_TICKS(1000));
-        ESP_LOGI(TAG, "Calisiyorum... v%s", YAZILIM_VERSIYON);
+        d_sayac_u32++;
+
+        /* Komut bayragi: kopyala -> temizle -> isle (uzun OTA sirasinda yeni komut kaybolmasin) */
+        if ( 0U != yazilim_kontrol_flag_u8 )
+        {
+            uint8_t d_komut_u8      = yazilim_kontrol_flag_u8;
+            yazilim_kontrol_flag_u8 = 0U;
+            yazilim_versiyon_kontrol(d_komut_u8);
+        }
+
+        /* Test yayini: 5 sn'de bir GPS paketi (QoS 1 — PUBACK yolu da test edilsin) */
+        if ( 0U == (d_sayac_u32 % 5U) )
+        {
+            gps_veri_paketi_st.gps_latitute_f  += 0.0001f;
+            gps_veri_paketi_st.gps_longitute_f += 0.0001f;
+            gps_veri_paketi_st.gps_altitute_f  += 0.5f   ;
+
+            json_len = snprintf(json_payload, sizeof(json_payload),
+                                "{\"Cihaz_ID\":%u,\"Yukseklik\":%.2f,\"Enlem\":%.6f,\"Boylam\":%.6f}" ,
+                                                (unsigned)  gps_veri_paketi_st.devices_id_u32 ,
+                                                            gps_veri_paketi_st.gps_altitute_f ,
+                                                            gps_veri_paketi_st.gps_latitute_f ,
+                                                            gps_veri_paketi_st.gps_longitute_f);
+
+            ESP_LOGI(TAG, "══════════════════════════════════════════════════════════════════════════════════════════════");
+            ESP_LOGI(TAG, "JSON (%d byte): %s", json_len, json_payload);
+
+            if ( MQTT_OK == mqtt_publish("hbs_smart_bike_2026_xyz123/gps", (const uint8_t *)json_payload, (uint16_t)json_len, 1U) )
+            {
+                ESP_LOGI(TAG, ">>> PUBLISH Gonderildi <<<");
+            }
+            else
+            {
+                ESP_LOGE(TAG, "PUBLISH basarisiz!");
+            }
+            ESP_LOGI(TAG, "══════════════════════════════════════════════════════════════════════════════════════════════\n");
+        }
     }
 }
 
@@ -155,9 +216,8 @@ static void yazilim_versiyon_kontrol(uint8_t d_komut_u8)
 
             if ( OTA_OK == ota_sonuc )
             {
-                mqtt_disconnect();                             
-                ESP_LOGI(TAG, "MQTT kapatildi, OTA basliyor.");
-    
+                /* TODO FAZ 5: yeni API ile MQTT baglantisini kapat (OTA sirasinda paket karismasin) */
+
                 ESP_LOGI(TAG, "Yeni firmware var, guncellenecek...");
                 ota_sonuc = ota_guncelle(&firmware_bilgi_st);
                 if ( OTA_OK != ota_sonuc )
@@ -182,9 +242,8 @@ static void yazilim_versiyon_kontrol(uint8_t d_komut_u8)
             
             if ( (OTA_OK == ota_sonuc) || (OTA_GUNCEL == ota_sonuc) )
             {
-                mqtt_disconnect();                             
-                ESP_LOGI(TAG, "MQTT kapatildi, OTA basliyor."); 
-                
+                /* TODO FAZ 5: yeni API ile MQTT baglantisini kapat (OTA sirasinda paket karismasin) */
+
                 ESP_LOGI(TAG, "Sunucudaki firmware yukleniyor...");
                 ota_sonuc = ota_guncelle(&firmware_bilgi_st);
                 if ( OTA_OK != ota_sonuc )
@@ -206,91 +265,19 @@ static void yazilim_versiyon_kontrol(uint8_t d_komut_u8)
     }
 }
 
-
-static void mqtt_test()
+static void yazilim_kontrol_handler(const uint8_t *p_payload_u8, uint16_t d_payload_len_u16)
 {
-    char        json_payload[128]                       ;
-    int         json_len                                ;
-    const char *topic = "hbs_smart_bike_2026_xyz123/gps";
-
-    ESP_LOGI(TAG, "===== MQTT =====");
-
-    if ( MQTT_OK != mqtt_connect("broker.hivemq.com", 1883, "esp32_bold", 60) )
-    {
-        ESP_LOGE(TAG, "MQTT connect basarisiz");
-        return;
-    }
-
-    /* ──── Callback + subscribe + receiver baslat ──── */
-    mqtt_set_message_callback(mqtt_message_handler);
-
-    if ( MQTT_OK != mqtt_subscribe("hbs_smart_bike_2026_xyz123/komut", 0) )
-    {
-        ESP_LOGE(TAG, "MQTT subscribe basarisiz");
-        mqtt_disconnect();
-        return;
-    }
-
-    mqtt_start_receiver();
-
-    gps_veri_paketi_st.devices_id_u32  = 42        ;
-    gps_veri_paketi_st.gps_altitute_f  = 120.5f    ;
-    gps_veri_paketi_st.gps_latitute_f  = 41.0082f  ;
-    gps_veri_paketi_st.gps_longitute_f = 28.9784f  ;
-
-    while ( true )
-    {
-        gps_veri_paketi_st.gps_latitute_f  += 0.0001f;
-        gps_veri_paketi_st.gps_longitute_f += 0.0001f;
-        gps_veri_paketi_st.gps_altitute_f  += 0.5f   ;
-
-        if ( 0U != yazilim_kontrol_flag_u8)
-        {
-            uint8_t d_komut_u8 = yazilim_kontrol_flag_u8;
-            yazilim_kontrol_flag_u8 = 0U;  
-            yazilim_versiyon_kontrol(d_komut_u8);
-        }
-
-        json_len = snprintf(json_payload, sizeof(json_payload),
-                            "{\"Cihaz_ID\":%u,\"Yukseklik\":%.2f,\"Enlem\":%.6f,\"Boylam\":%.6f}" ,
-                                            (unsigned)  gps_veri_paketi_st.devices_id_u32 ,
-                                                        gps_veri_paketi_st.gps_altitute_f ,
-                                                        gps_veri_paketi_st.gps_latitute_f ,
-                                                        gps_veri_paketi_st.gps_longitute_f);
-        ESP_LOGI(TAG, "══════════════════════════════════════════════════════════════════════════════════════════════");
-        ESP_LOGI(TAG, "JSON (%d byte): %s", json_len, json_payload);
-
-        if ( MQTT_OK != mqtt_publish(topic, (const uint8_t *)json_payload, (uint16_t)json_len) )
-        {
-            ESP_LOGE(TAG, "PUBLISH basarisiz, donguden cikiliyor");
-            break;
-        }
-
-        vTaskDelay(pdMS_TO_TICKS(5000));
-    }
-
-    mqtt_disconnect();
-
-    ESP_LOGI(TAG, "===== MQTT TESTI BITTI =====");
-}
-
-
-/* ─────────── MQTT mesaj geldiginde tetiklenen handler ─────────── */
-static void mqtt_message_handler(   const   char    *p_topic_ch   ,
-                                    const   uint8_t *p_payload_u8 ,
-                                            size_t   d_payload_len )
-{
-    cJSON *p_json_st        = NULL;
-    cJSON *p_kontrol_st     = NULL;
+    cJSON *p_json_st    = NULL;
+    cJSON *p_kontrol_st = NULL;
 
     ESP_LOGI(TAG, "══════════════════════════════════════════════════════════════════════════════════════════════");
     ESP_LOGI(TAG, ">>> MQTT MESAJ GELDI <<<");
-    ESP_LOGI(TAG, "Topic   : %s"     , p_topic_ch);
-    ESP_LOGI(TAG, "Payload : %.*s"   , (int)d_payload_len, (const char *)p_payload_u8);
+    ESP_LOGI(TAG, "Topic   : hbs_smart_bike_2026_xyz123/komut");
+    ESP_LOGI(TAG, "Payload : %.*s", (int)d_payload_len_u16, (const char *)p_payload_u8);
 
-    p_json_st = cJSON_ParseWithLength((const char *)p_payload_u8, d_payload_len);
+    p_json_st = cJSON_ParseWithLength((const char *)p_payload_u8, d_payload_len_u16);
 
-    if(NULL != p_json_st)
+    if ( NULL != p_json_st )
     {
         p_kontrol_st = cJSON_GetObjectItem(p_json_st, "YAZILIM_KONTROL");
 
@@ -318,11 +305,10 @@ static void mqtt_message_handler(   const   char    *p_topic_ch   ,
         ESP_LOGE(TAG, "JSON parse edilemedi!");
     }
 
-        ESP_LOGI(TAG, "══════════════════════════════════════════════════════════════════════════════════════════════");
+    ESP_LOGI(TAG, "══════════════════════════════════════════════════════════════════════════════════════════════");
 
     cJSON_Delete(p_json_st);
 }
-
 
 /* ─────────────── sim800c_io_t wrapper fonksiyonlari ─────────────── */
 static void sim_send(const uint8_t *data, size_t len)

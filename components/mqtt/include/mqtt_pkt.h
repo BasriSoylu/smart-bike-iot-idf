@@ -365,6 +365,7 @@ typedef struct
 {
     const char *p_topic_ch     ;
     uint16_t    d_packet_id_u16;   /* sadece QoS > 0 için kullanılır, QoS 0'da yok say */
+    uint16_t    d_topic_len_u16;
 }publish_variable_header_t;
 
 
