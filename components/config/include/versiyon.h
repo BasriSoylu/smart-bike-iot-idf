@@ -5,12 +5,28 @@
  *================================================================*/
 #define YAZILIM_VERSIYON_MAJOR  1
 #define YAZILIM_VERSIYON_MINOR  6
-#define YAZILIM_VERSIYON_PATCH  0
-#define YAZILIM_VERSIYON        "1.6.0"
+#define YAZILIM_VERSIYON_PATCH  1
+#define YAZILIM_VERSIYON        "1.6.1"
 
 /*================================================================
  * VERSIYON GECMISI - En Yeni Ustte
  *================================================================*/
+
+
+/*******************************************************************
+ * Versiyon       : v1.6.1
+ * Branch         : main
+ * Kullanilan SDK : ESP-IDF v5.5
+ * Kullanilan IDE : Visual Studio Code
+ *=================================================================
+* Yazar           : Hasan Basri SOYLU
+* Tarih           : 25.07.2026
+*==================================================================
+* Aciklama        : - MQTT tamamlanmistir. Ilerleyen zamanlarda 
+*                     duzeltmeler gelebilr.
+*                   - Test broker ile sorunsuz calismistir.
+*                     kendi brokerimiza baglama islemi baslayacaktir.
+*******************************************************************/
 
 
 /*******************************************************************

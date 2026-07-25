@@ -39,11 +39,13 @@ typedef struct
     uint16_t        d_will_payload_len_u16 ;
     uint8_t         d_will_qos_u8          ;
     uint8_t         d_will_retain          ;
+    const char     *p_username_ch          ;   /* NULL = username yok */
+    const char     *p_password_ch          ;   /* NULL = password yok */
 }mqtt_config_t;
 
 /*=================== Callback Tipi ===================*/
 typedef void (*mqtt_topic_handler_t)(const uint8_t *p_payload_u8, uint16_t d_payload_len_u16);
-
+typedef void (*mqtt_hata_callback_t)(void);
 
 /*======================= Transport Interface =======================
  * MQTT katmani altinda TCP'yi nasil konusacagini bilmez.
@@ -66,6 +68,7 @@ typedef struct
     int  (*send     )(const uint8_t *p_data_u8,   size_t   d_data_length                               );
     int  (*receive  )(      uint8_t *p_data_u8,   size_t   d_max_data_length, uint32_t d_timeout_ms_u32);
     void (*log      )(const char    *p_message_ch                                                      );
+    mqtt_hata_callback_t hata_callback;
 }mqtt_transport_t;
 
 
@@ -74,9 +77,9 @@ typedef struct
 /* NOT: Yeni mimarinin public API'si (mqtt_start/stop, subscribe(topic,qos,handler),
  *      publish(topic,payload,len,qos), unsubscribe) FAZ 4D/5'te buraya eklenecek. */
 mqtt_return_t mqtt_init      (const mqtt_transport_t *fp_transport                                                                           );
-mqtt_return_t mqtt_subscribe (const char             *p_topic_ch  ,       uint8_t  d_qos_u8    , mqtt_topic_handler_t fp_handler             );
-mqtt_return_t mqtt_publish   (const char             *p_topic_ch  , const uint8_t *p_payload_u8, uint16_t d_payload_len_u16, uint8_t d_qos_u8);
 mqtt_return_t mqtt_start     (const mqtt_config_t    *p_config_st                                                                            );
+mqtt_return_t mqtt_publish   (const char             *p_topic_ch  , const uint8_t *p_payload_u8, uint16_t d_payload_len_u16, uint8_t d_qos_u8);
+mqtt_return_t mqtt_subscribe (const char             *p_topic_ch  ,       uint8_t  d_qos_u8    , mqtt_topic_handler_t fp_handler             );
 
 
 

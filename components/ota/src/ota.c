@@ -21,7 +21,7 @@ static const char *TAG = "OTA";
 ota_sonuc_t ota_kontrol(ota_firmware_bilgi_t *p_bilgi_st)
 {
     char json_buf[512]     = {0} ;
-    int  okunan        =  0  ;  
+    int  okunan            =  0  ;  
 
     if( NULL == p_bilgi_st )
     {
