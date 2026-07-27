@@ -5,12 +5,32 @@
  *================================================================*/
 #define YAZILIM_VERSIYON_MAJOR  1
 #define YAZILIM_VERSIYON_MINOR  6
-#define YAZILIM_VERSIYON_PATCH  1
-#define YAZILIM_VERSIYON        "1.6.1"
+#define YAZILIM_VERSIYON_PATCH  2
+#define YAZILIM_VERSIYON        "1.6.2"
 
 /*================================================================
  * VERSIYON GECMISI - En Yeni Ustte
  *================================================================*/
+
+
+/*******************************************************************
+ * Versiyon       : v1.6.2
+ * Branch         : main
+ * Kullanilan SDK : ESP-IDF v5.5
+ * Kullanilan IDE : Visual Studio Code
+ *=================================================================
+* Yazar           : Hasan Basri SOYLU
+* Tarih           : 28.07.2026
+*==================================================================
+* Aciklama        : - SIM808 PWRKEY donanimsal reset ozelligi eklendi.
+*                     Modul AT komutlarina cevap vermez hale gelirse
+*                     (kilitlenirse), ardisik GPRS onarim denemeleri
+*                     basarisiz olunca PWRKEY ile otomatik reset atilip
+*                     modul yeniden baslatiliyor. Gercek kilitlenme
+*                     senaryosunda donanimda dogrulandi.
+*                   - dualino.com gercek sunucusuna baglanti tekrar
+*                     aktif edildi (test broker'dan geri donuldu).
+*******************************************************************/
 
 
 /*******************************************************************

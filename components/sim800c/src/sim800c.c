@@ -182,6 +182,14 @@ int sim800c_baslat(void)
     return 0;
 }
 
+void sim800c_hard_reset(void)
+{
+    sim_arayuz->pwrkey_set(0U);
+    vTaskDelay(pdMS_TO_TICKS(1500));
+    sim_arayuz->pwrkey_set(1U);
+    vTaskDelay(pdMS_TO_TICKS(3000));
+}
+
 void sim800c_send_command(const char *cmd)
 {
     char    buf[160];

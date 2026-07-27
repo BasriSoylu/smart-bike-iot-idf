@@ -15,11 +15,12 @@
 /* main.c bu struct'ı doldurup sim800c_init()'e verir.*/
 /* ----------------------------------------------------------------- */
 typedef struct {
-    void (*send)    (const uint8_t  *data , size_t len                     );
-    int  (*read)    (      uint8_t  *buf  , size_t len, uint32_t timeout_ms);
-    void (*log )    (const char     *msg                                   );
-    void (*set_baud)(      uint32_t  baud                                  );
-    void (*flush)    (      void                                           );
+    void (*send)      (const uint8_t  *data        , size_t len                     );
+    int  (*read)      (      uint8_t  *buf         , size_t len, uint32_t timeout_ms);
+    void (*log )      (const char     *msg                                          );
+    void (*set_baud)  (      uint32_t  baud                                         );
+    void (*flush)     (      void                                                   );
+    void (*pwrkey_set)(      uint8_t   d_seviye_u8                                  );  /* 0=LOW, 1=HIGH */
 } sim800c_io_t;
 
 /* ─────────────────── State Machine Durumları ───────────────────── */
@@ -66,6 +67,17 @@ int sim800c_baslat(void);
  * Aciklama      : AT komutunu UART uzerinden gonderir.
  ****************************************************************/
 void sim800c_send_command(const char *cmd);
+
+
+/****************************************************************
+ * Yazan         : Hasan Basri Soylu
+ * Fonksiyon     : sim800c_hard_reset
+ * Parametre     : void
+ * Donus Degeri  : void
+ * Aciklama      : sim800c modulunun PWRKEY pini uzerinden sim800c
+ *                 entegresine reset atar.
+ ****************************************************************/
+void sim800c_hard_reset(void);
 
 
 /****************************************************************
