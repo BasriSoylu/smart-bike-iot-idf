@@ -27,7 +27,7 @@
 
 #define MQTT_PINGRESP_TIMEOUT_MS        (15000U)   // Ping cevabi bu surede gelmezse baglanti olmus sayilir
 
-#define MQTT_ARDISIK_HATA_ESIGI         (3U    )   // Bu kadar ust uste basarisiz baglanmadan sonra callback cagrilir
+#define MQTT_ARDISIK_HATA_ESIGI         (2U    )   // Bu kadar ust uste basarisiz baglanmadan sonra callback cagrilir
 
 
 /*=================== Typedef ===================*/
@@ -1178,4 +1178,9 @@ static void durum_koptu_isle(void)
     }
 
     s_durum_et = MQTT_DURUM_BAGLANIYOR;
+}
+
+uint8_t mqtt_bagli_mi(void)
+{
+    return (uint8_t)(MQTT_DURUM_BAGLI == s_durum_et);
 }

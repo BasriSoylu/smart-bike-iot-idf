@@ -80,7 +80,7 @@ mqtt_return_t mqtt_init      (const mqtt_transport_t *fp_transport              
 mqtt_return_t mqtt_start     (const mqtt_config_t    *p_config_st                                                                            );
 mqtt_return_t mqtt_publish   (const char             *p_topic_ch  , const uint8_t *p_payload_u8, uint16_t d_payload_len_u16, uint8_t d_qos_u8);
 mqtt_return_t mqtt_subscribe (const char             *p_topic_ch  ,       uint8_t  d_qos_u8    , mqtt_topic_handler_t fp_handler             );
-
+uint8_t       mqtt_bagli_mi  (void                                                                                                           );   /* 1 = bagli, 0 = degil */
 
 
 

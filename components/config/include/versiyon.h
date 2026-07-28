@@ -5,12 +5,36 @@
  *================================================================*/
 #define YAZILIM_VERSIYON_MAJOR  1
 #define YAZILIM_VERSIYON_MINOR  6
-#define YAZILIM_VERSIYON_PATCH  2
-#define YAZILIM_VERSIYON        "1.6.2"
+#define YAZILIM_VERSIYON_PATCH  3
+#define YAZILIM_VERSIYON        "1.6.3"
 
 /*================================================================
  * VERSIYON GECMISI - En Yeni Ustte
  *================================================================*/
+
+
+/*******************************************************************
+ * Versiyon       : v1.6.3
+ * Branch         : main
+ * Kullanilan SDK : ESP-IDF v5.5
+ * Kullanilan IDE : Visual Studio Code
+ *=================================================================
+* Yazar           : Hasan Basri SOYLU
+* Tarih           : 29.07.2026
+*==================================================================
+* Aciklama        : - PWRKEY cift-darbe bug'i duzeltildi (sim800c_baslat
+*                     ve sim800c_gprs_guvenli_baglan kendi icinde ayrica
+*                     reset atmiyordu, tek sorumluluk sim800c_guvenli_baslat'a
+*                     indirildi). Modul artik yanlislikla tekrar kapatilmiyor.
+*                   - mqtt_hata_callback sadelestirildi (sim800c_gprs_guvenli_baglan
+*                     kullaniyor, kendi zayif tek-shot mantigi kaldirildi).
+*                   - mqtt_bagli_mi() eklendi, main.c artik baglı degilken
+*                     publish denemiyor (JSON olusturma/loglama atlaniyor).
+*                   - NOT: publish periyodu su an %1 (her saniye) - test icin
+*                     bilerek, uretime gecmeden %30'a donmesi gerekiyor!
+*                   - Acik: mqtt_do_publish gonderim hatasinda s_durum_et'i
+*                     dogrudan KOPTU yapma fikri henuz uygulanmadi (bkz. memory).
+*******************************************************************/
 
 
 /*******************************************************************

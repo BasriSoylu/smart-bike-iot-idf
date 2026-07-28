@@ -5,11 +5,14 @@
 #include <stddef.h>
 #include "config.h"
 
-#define DEBUG_PAKET_CIKTISI        (0U)
+#define DEBUG_PAKET_CIKTISI                   (    0U    )
 
-#define SIM800C_VERI_VAR           (1U)
-#define SIM800C_HEDEF_BAUD_RATE    (115200U)
-#define SIM800C_DEFAULT_BAUD_RATE  (9600U)
+#define SIM800C_VERI_VAR                      (    1U    )
+#define SIM800C_HEDEF_BAUD_RATE               ( 115200U  )
+#define SIM800C_DEFAULT_BAUD_RATE             (  9600U   )
+#define SIM800C_BASLAT_DENEME_LIMITI          (    2U    )
+#define SIM800C_BASLAT_COOLDOWN_MS            (  20000U  )
+#define SIM800C_GPRS_DENEME_ARASI_MS          (   5000U  )
 
 /* ──────────────── IO Arayüzü (Dependency Injection) ──────────────── */
 /* main.c bu struct'ı doldurup sim800c_init()'e verir.*/
@@ -71,6 +74,19 @@ void sim800c_send_command(const char *cmd);
 
 /****************************************************************
  * Yazan         : Hasan Basri Soylu
+ * Fonksiyon     : sim800c_guvenli_baslat
+ * Parametre     : void
+ * Donus Degeri  : void
+ * Aciklama      : sim800c_baslat() basarisiz olursa PWRKEY ile
+ *                 donanimsal reset atip tekrar dener. Deneme limiti
+ *                 asilirsa bir sure bekleyip bastan baslar —
+ *                 sonsuza kadar, hic vazgecmez.
+ ****************************************************************/
+void sim800c_guvenli_baslat(void);
+
+
+/****************************************************************
+ * Yazan         : Hasan Basri Soylu
  * Fonksiyon     : sim800c_hard_reset
  * Parametre     : void
  * Donus Degeri  : void
@@ -120,6 +136,20 @@ const char *sim800c_get_response(void);
  * Aciklama      : GPRS baglantisini kurar.
  ****************************************************************/
 int sim800c_gprs_connect(void);
+
+
+/****************************************************************
+ * Yazan         : Hasan Basri Soylu
+ * Fonksiyon     : sim800c_gprs_guvenli_baglan
+ * Parametre     : void
+ * Donus Degeri  : void
+ * Aciklama      : sim800c_gprs_connect()'i dener; basarisiz olursa modulun
+ *                 hala AT komutlarina cevap verip vermedigini kontrol eder.
+ *                 Cevap veriyorsa (sebeke/sinyal sorunu) bekleyip tekrar
+ *                 dener; hic cevap vermiyorsa PWRKEY ile donanimsal reset
+ *                 atip modulu tam yeniden baslatir. Sonsuza kadar dener.
+ ****************************************************************/
+void sim800c_gprs_guvenli_baglan(void);
 
 
 /****************************************************************

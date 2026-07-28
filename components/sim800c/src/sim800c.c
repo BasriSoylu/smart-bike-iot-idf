@@ -119,7 +119,7 @@ int sim800c_baslat(void)
 
         for ( j = 0; j < 3; j++ )
         {
-            if ( 0 == sim800c_cmd_wait(AT_TEST, "OK", BEKLE_3_SN) )
+            if ( 0 == sim800c_cmd_wait(AT_TEST, "OK", BEKLE_1_SN) )
             {
                 bulunan_baud = baud_listesi[i];
                 sim800c_logf(">>> Modul bulundu: Baud=%u (deneme %d)", (unsigned)bulunan_baud, j + 1);
@@ -180,6 +180,36 @@ int sim800c_baslat(void)
         sim800c_logf("Modul hazir: Baud=%u (autobaud yok, tarama baud'unda devam)", (unsigned)bulunan_baud);
     }
     return 0;
+}
+
+void sim800c_guvenli_baslat(void)
+{
+    uint32_t d_deneme_u32;
+    uint8_t  b_baslatildi_u8;
+
+    do
+    {
+        b_baslatildi_u8 = 0U;
+
+        for ( d_deneme_u32 = 0U; d_deneme_u32 < SIM800C_BASLAT_DENEME_LIMITI; d_deneme_u32++ )
+        {
+            if ( 0 == sim800c_baslat() )
+            {
+                b_baslatildi_u8 = 1U;
+                break;
+            }
+
+            sim800c_logf("SIM800C baslatilamadi (deneme %u/%u) — PWRKEY ile reset atiliyor...", (unsigned)(d_deneme_u32 + 1U), (unsigned)SIM800C_BASLAT_DENEME_LIMITI);
+            sim800c_hard_reset();
+        }
+
+        if ( 0U == b_baslatildi_u8 )
+        {
+            sim800c_logf("SIM800C %u denemede de baslatilamadi, %u sn bekleyip yeniden denenecek...",(unsigned)SIM800C_BASLAT_DENEME_LIMITI, (unsigned)(SIM800C_BASLAT_COOLDOWN_MS / 1000U));
+            vTaskDelay(pdMS_TO_TICKS(SIM800C_BASLAT_COOLDOWN_MS));
+        }
+
+    } while ( 0U == b_baslatildi_u8 );
 }
 
 void sim800c_hard_reset(void)
@@ -546,6 +576,29 @@ int sim800c_gprs_connect(void)
 
     geri_donus_degeri = 0;
     return geri_donus_degeri;
+}
+
+void sim800c_gprs_guvenli_baglan(void)
+{
+    uint8_t b_baglandi_u8 = 0U;
+
+    while ( 0U == b_baglandi_u8 )
+    {
+        if ( 0 == sim800c_gprs_connect() )
+        {
+            b_baglandi_u8 = 1U;
+        }
+        else if ( 0 == sim800c_cmd_wait("AT", "OK", BEKLE_3_SN) )
+        {
+            sim800c_logf("GPRS baglanamadi ama modul canli, %u sn sonra tekrar denenecek...",(unsigned)(SIM800C_GPRS_DENEME_ARASI_MS / 1000U));
+            vTaskDelay(pdMS_TO_TICKS(SIM800C_GPRS_DENEME_ARASI_MS));
+        }
+        else
+        {
+            sim800c_logf("Modul cevap vermiyor — PWRKEY ile donanimsal reset atiliyor...");
+            sim800c_guvenli_baslat();
+        }
+    }
 }
 
 int sim800c_gprs_disconnect(void)

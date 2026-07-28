@@ -25,8 +25,6 @@ static const char *TAG = "MAIN";
 #define SIM800C_RX_BUF_SIZE                                      (   32768   )
 #define SIM800C_TX_BUF_SIZE                                      (   1024    )
 
-#define MQTT_HATA_CALLBACK_HARD_RESET_ESIGI                      (     2     )
-
 static volatile uint8_t       yazilim_kontrol_flag_u8 = 0U;
 static          uart_handle_t g_sim_uart                  ;
 
@@ -49,6 +47,7 @@ static void mqtt_hata_callback    (void                                         
 /* ──────────────────── main fonksiyonlarinin prototipleri ────────────────── */
 static void cevresel_ayarla         ();
 static void cevresel_baslat         ();
+static void cevresel_baslat_task    (void *pvParameters                                     );
 static void yazilim_versiyon_kontrol(uint8_t d_komut_u8                                     );
 static void yazilim_kontrol_handler (const uint8_t *p_payload_u8, uint16_t d_payload_len_u16);
 
@@ -59,7 +58,8 @@ void app_main(void)
     int      json_len             ;
 
     cevresel_ayarla(); 
-    cevresel_baslat();
+
+    xTaskCreate(cevresel_baslat_task, "gsm_baslat", 4096, NULL, 5, NULL);
 
     ESP_LOGI(TAG, "Firmware v%s basliyor...", YAZILIM_VERSIYON);
 
@@ -78,40 +78,43 @@ void app_main(void)
             LOG_DUVAR();
         }
 
-        if ( 0U == (d_sayac_u32 % 30U) )
+        if ( 0U == (d_sayac_u32 % 1U) )
         {
-            /* GPS: donanimsal GNSS entegrasyonu henuz yok, gecici sabit deger (dummy) */
-            json_len = snprintf(json_payload, sizeof(json_payload),
-                                "{\"Cihaz_ID\":%u,\"Yukseklik\":%.1f,\"Enlem\":%.4f,\"Boylam\":%.4f}",
-                                CIHAZ_ID_U32, 42.0, 41.0082, 28.9784);
-            LOG_DUVAR();
-            ESP_LOGI(TAG, "JSON (%d byte): %s", json_len, json_payload);
+            if ( 0U != mqtt_bagli_mi() )
+            {
+                /* GPS: donanimsal GNSS entegrasyonu henuz yok, gecici sabit deger (dummy) */
+                json_len = snprintf(json_payload, sizeof(json_payload),
+                                    "{\"Cihaz_ID\":%u,\"Yukseklik\":%.1f,\"Enlem\":%.4f,\"Boylam\":%.4f}",
+                                    CIHAZ_ID_U32, 42.0, 41.0082, 28.9784);
+                LOG_DUVAR();
+                ESP_LOGI(TAG, "JSON (%d byte): %s", json_len, json_payload);
 
-            if ( MQTT_OK == mqtt_publish("BOLD-2026-0001/gps", (const uint8_t *)json_payload, (uint16_t)json_len, 1U) )
-            {
-                ESP_LOGI(TAG, ">>> PUBLISH Gonderildi <<<");
-            }
-            else
-            {
-                ESP_LOGE(TAG, "PUBLISH basarisiz!");
-            }
-            LOG_DUVAR();
+                if ( MQTT_OK == mqtt_publish("BOLD-2026-0001/gps", (const uint8_t *)json_payload, (uint16_t)json_len, 1U) )
+                {
+                    ESP_LOGI(TAG, ">>> PUBLISH Gonderildi <<<");
+                }
+                else
+                {
+                    ESP_LOGE(TAG, "PUBLISH basarisiz!");
+                }
+                LOG_DUVAR();
 
-            json_len = snprintf(json_payload, sizeof(json_payload),
-                                "{\"Cihaz_ID\":%u,\"versiyon\":\"%s\"}",
-                                CIHAZ_ID_U32, YAZILIM_VERSIYON);
-            LOG_DUVAR();
-            ESP_LOGI(TAG, "JSON (%d byte): %s", json_len, json_payload);
+                json_len = snprintf(json_payload, sizeof(json_payload),
+                                    "{\"Cihaz_ID\":%u,\"versiyon\":\"%s\"}",
+                                    CIHAZ_ID_U32, YAZILIM_VERSIYON);
+                LOG_DUVAR();
+                ESP_LOGI(TAG, "JSON (%d byte): %s", json_len, json_payload);
 
-            if ( MQTT_OK == mqtt_publish("BOLD-2026-0001/durum", (const uint8_t *)json_payload, (uint16_t)json_len, 1U) )
-            {
-                ESP_LOGI(TAG, ">>> PUBLISH Gonderildi <<<");
+                if ( MQTT_OK == mqtt_publish("BOLD-2026-0001/durum", (const uint8_t *)json_payload, (uint16_t)json_len, 1U) )
+                {
+                    ESP_LOGI(TAG, ">>> PUBLISH Gonderildi <<<");
+                }
+                else
+                {
+                    ESP_LOGE(TAG, "PUBLISH basarisiz!");
+                }
+                LOG_DUVAR();
             }
-            else
-            {
-                ESP_LOGE(TAG, "PUBLISH basarisiz!");
-            }
-            LOG_DUVAR();
         }
     }
 }
@@ -171,20 +174,11 @@ static void cevresel_ayarla()
     mqtt_init(&fp_mqtt_transport_st);
 }
 
-
 static void cevresel_baslat()
 {
-    if ( 0 != sim800c_baslat() )
-    {
-        ESP_LOGE(TAG, "SIM800C modulu baslatilamadi!");
-        return;
-    }
+    sim800c_guvenli_baslat();
 
-    if ( 0 != sim800c_gprs_connect() )
-    {
-        ESP_LOGE(TAG, "GPRS baglantisi basarisiz!");
-        return;
-    }
+    sim800c_gprs_guvenli_baglan();
 
     LOG_DUVAR();
 
@@ -206,6 +200,12 @@ static void cevresel_baslat()
         }
     }
     LOG_DUVAR();
+}
+
+static void cevresel_baslat_task(void *pvParameters)
+{
+    cevresel_baslat();
+    vTaskDelete(NULL);
 }
 
 /* ─────────────── OTA yazilim guncelleme fonksiyonlari ─────────────── */
@@ -363,33 +363,8 @@ static void mqtt_log_wrapper(const char *msg)
 }
 static void mqtt_hata_callback(void)
 {
-    static uint8_t s_ardisik_gprs_hata_u8 = 0;
-
     ESP_LOGW(TAG, "MQTT ardisik baglanma hatasi — GPRS kontrol ediliyor...");
-
-    if ( 0 == sim800c_gprs_connect() )
-    {
-        s_ardisik_gprs_hata_u8 = 0U;
-    }
-    else
-    {
-        s_ardisik_gprs_hata_u8++;
-
-        if ( s_ardisik_gprs_hata_u8 >= MQTT_HATA_CALLBACK_HARD_RESET_ESIGI )
-        {
-            ESP_LOGE(TAG, "GPRS onarimi ardisik basarisiz — PWRKEY ile donanimsal reset atiliyor...");
-            sim800c_hard_reset();
-            s_ardisik_gprs_hata_u8 = 0U;
-
-            if ( 0 != sim800c_baslat() )
-            {
-                ESP_LOGE(TAG, "Donanimsal reset sonrasi SIM800C baslatilamadi!");
-                return;
-            }
-
-            sim800c_gprs_connect();
-        }
-    }
+    sim800c_gprs_guvenli_baglan();
 }
 
 
